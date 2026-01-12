@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小清華原民班升學資訊網</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Noto Sans TC', sans-serif; }
+        .calendar-card:hover { transform: translateY(-2px); transition: all 0.3s ease; }
+        .highlight-this-week { border-left: 4px solid #f59e0b; background-color: #fffbeb; }
+        .highlight-next-week { border-left: 4px solid #3b82f6; background-color: #eff6ff; }
+        .glass-nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        [v-cloak] { display: none; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 pb-12">
+
+    <nav class="sticky top-0 z-50 glass-nav border-b border-slate-200">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center space-x-2" onclick="showSection('home')" style="cursor: pointer;">
+                    <div class="w-10 h-10 bg-indigo-700 rounded-lg flex items-center justify-center text-white shadow-lg shadow-indigo-200">
+                        <i class="fas fa-university"></i>
+                    </div>
+                    <div>
+                        <span class="font-bold text-lg text-slate-900 block leading-tight">小清華原民班</span>
+                        <span class="text-xs text-indigo-600 font-medium tracking-widest uppercase">升學資訊網</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-1 md:space-x-4">
+                    <button onclick="showSection('home')" class="text-slate-600 hover:text-indigo-600 px-3 py-2 text-sm font-medium">行事曆</button>
+                    <button onclick="showSection('bulletin')" class="text-slate-600 hover:text-indigo-600 px-3 py-2 text-sm font-medium">最新公告</button>
+                    <a href="https://frentexx.github.io/screening-strategy/" target="_blank" class="hidden md:block text-slate-600 hover:text-indigo-600 px-3 py-2 text-sm font-medium">甄選策略</a>
+                    <button id="loginBtn" onclick="handleAuth()" class="bg-slate-100 text-slate-600 px-4 py-1.5 rounded-full text-xs font-semibold hover:bg-indigo-50 hover:text-indigo-600 transition">管理</button>
+                    <div id="adminPanel" class="hidden flex items-center space-x-2 bg-indigo-50 p-1 px-3 rounded-full border border-indigo-100">
+                        <span id="userName" class="text-xs text-indigo-700 font-medium"></span>
+                        <button onclick="logout()" class="text-xs text-red-400 hover:text-red-600">登出</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto px-4 py-8">
+        
+        <section id="home-section">
+            <div class="mb-8">
+                <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center">
+                    <span class="w-2 h-6 bg-amber-400 rounded-full mr-3"></span>重點時程提醒
+                </h2>
+                <div id="weekly-highlights" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="p-6 bg-white rounded-2xl shadow-sm border border-slate-100">載入中...</div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="flex bg-slate-50/50 p-2">
+                    <button onclick="switchTab('sheet1')" id="tab-sheet1" class="flex-1 py-3 text-center rounded-xl font-bold transition-all text-indigo-600 bg-white shadow-sm">採計學測</button>
+                    <button onclick="switchTab('sheet2')" id="tab-sheet2" class="flex-1 py-3 text-center rounded-xl font-bold transition-all text-slate-400 hover:text-slate-600">獨立招生</button>
+                </div>
+                
+                <div class="p-2 md:p-6">
+                    <div id="calendar-content" class="space-y-3">
+                        </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="bulletin-section" class="hidden">
+            <div class="flex justify-between items-end mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold text-slate-900">最新公告</h2>
+                    <p class="text-slate-500 mt-1">校園升學資訊、簡章下載與重要通知</p>
+                </div>
+                <button id="addPostBtn" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-indigo-100 transition" onclick="openPostModal()">
+                    <i class="fas fa-edit mr-2"></i>發布公告
+                </button>
+            </div>
+            <div id="announcement-list" class="space-y-6">
+                </div>
+        </section>
+    </main>
+
+    <div id="postModal" class="fixed inset-0 bg-slate-900/60 hidden z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl w-full max-w-lg p-8 shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-slate-800">建立新公告</h3>
+                <button onclick="closePostModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">公告標題</label>
+                    <input type="text" id="postTitle" placeholder="例如：115學年度醫事人員甄試簡章" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 ring-indigo-500 outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">公告內容</label>
+                    <textarea id="postContent" rows="4" placeholder="請輸入說明文字..." class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 ring-indigo-500 outline-none transition"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">外部檔案/連結 (選填)</label>
+                    <input type="text" id="postLink" placeholder="請貼上 Google Drive 分享連結" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 ring-indigo-500 outline-none transition">
+                    <p class="text-[10px] text-slate-400 mt-2 italic"><i class="fas fa-info-circle mr-1"></i>請將檔案上傳至 Google 雲端並開啟「知道連結的人皆可查看」</p>
+                </div>
+                <div class="flex space-x-3 pt-4">
+                    <button onclick="closePostModal()" class="flex-1 px-4 py-3 font-bold text-slate-500 bg-slate-100 rounded-xl hover:bg-slate-200 transition">取消</button>
+                    <button id="saveBtn" onclick="savePost()" class="flex-[2] px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition">確認發布</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBJPnmqXZdJDryceCIOiebx9yX5vU-tB2Q",
+            authDomain: "find-your-way-9fd0d.firebaseapp.com",
+            projectId: "find-your-way-9fd0d",
+            storageBucket: "find-your-way-9fd0d.firebasestorage.app",
+            messagingSenderId: "1066707918164",
+            appId: "1:1066707918164:web:e79d1f686d322fd29d3cc1",
+            measurementId: "G-JSH0D44X0Y"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        const ADMIN_EMAILS = [
+            "ljuzem115@ppsh.ptc.edu.tw", "fuwen@ppsh.ptc.edu.tw",
+            "jinglan@ppsh.ptc.edu.tw", "tulip520@ppsh.ptc.edu.tw"
+        ];
+
+        // ---------------- 內建行事曆資料 (由 CSV 轉化) ----------------
+        const calendarData = {
+            "sheet1": [
+                {month: "11月", cat: "師範/醫事", content: "各管道報名作業陸續展開"},
+                {month: "12月", cat: "師範原民", content: "01-08 網路報名"},
+                {month: "1月", cat: "全體", content: "17-19 學科能力測驗 (學測)"},
+                {month: "2月", cat: "全體", content: "24 寄發學測成績單"},
+                {month: "3月", cat: "個人申請", content: "03-05 報名作業"},
+                {month: "3月", cat: "繁星推薦", content: "11 公告錄取名單"}
+            ],
+            "sheet2": [
+                {month: "11月", cat: "暨南/獨立", content: "1127-0317 網路報名"},
+                {month: "12月", cat: "高師大", content: "1216-0113 報名期間"},
+                {month: "1月", cat: "屏東大學", content: "0105-0303 報名"},
+                {month: "1月", cat: "靜宜/獨立", content: "0128-0514 報名"},
+                {month: "1月", cat: "中山/獨立", content: "0112-0205 報名"}
+            ]
+        };
+
+        // ---------------- 功能邏輯 ----------------
+        window.showSection = (section) => {
+            document.getElementById('home-section').classList.toggle('hidden', section !== 'home');
+            document.getElementById('bulletin-section').classList.toggle('hidden', section !== 'bulletin');
+            if(section === 'bulletin') loadAnnouncements();
+        };
+
+        let currentTab = 'sheet1';
+        window.switchTab = (tab) => {
+            currentTab = tab;
+            const t1 = document.getElementById('tab-sheet1');
+            const t2 = document.getElementById('tab-sheet2');
+            t1.className = tab === 'sheet1' ? 'flex-1 py-3 text-center rounded-xl font-bold transition-all text-indigo-600 bg-white shadow-sm' : 'flex-1 py-3 text-center rounded-xl font-bold transition-all text-slate-400 hover:text-slate-600';
+            t2.className = tab === 'sheet2' ? 'flex-1 py-3 text-center rounded-xl font-bold transition-all text-indigo-600 bg-white shadow-sm' : 'flex-1 py-3 text-center rounded-xl font-bold transition-all text-slate-400 hover:text-slate-600';
+            renderCalendar();
+        };
+
+        function renderCalendar() {
+            const container = document.getElementById('calendar-content');
+            container.innerHTML = calendarData[currentTab].map(item => `
+                <div class="calendar-card p-5 bg-white border border-slate-100 rounded-2xl flex items-center space-x-5 shadow-sm">
+                    <div class="flex flex-col items-center justify-center bg-indigo-50 text-indigo-700 rounded-xl h-14 w-14 flex-shrink-0 font-bold">
+                        <span class="text-lg">${item.month}</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-0.5">${item.cat}</div>
+                        <div class="text-slate-700 font-bold">${item.content}</div>
+                    </div>
+                    <i class="fas fa-calendar-check text-slate-100 text-2xl"></i>
+                </div>
+            `).join('');
+        }
+
+        async function loadAnnouncements() {
+            const list = document.getElementById('announcement-list');
+            const q = query(collection(db, "announcements"), orderBy("createdAt", "desc"));
+            const snapshot = await getDocs(q);
+            
+            if(snapshot.empty) {
+                list.innerHTML = `<div class="text-center py-20 text-slate-300 font-medium">目前暫無公告資訊</div>`;
+                return;
+            }
+
+            list.innerHTML = snapshot.docs.map(docSnap => {
+                const data = docSnap.data();
+                const isAdmin = auth.currentUser && ADMIN_EMAILS.includes(auth.currentUser.email);
+                const dateStr = data.createdAt ? new Date(data.createdAt.toDate()).toLocaleDateString() : '剛剛';
+                return `
+                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition relative">
+                        <div class="flex items-center space-x-2 text-indigo-500 text-xs font-bold mb-3">
+                            <i class="fas fa-bullhorn"></i>
+                            <span>${dateStr}</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-3">${data.title}</h3>
+                        <p class="text-slate-600 leading-relaxed mb-6 whitespace-pre-wrap">${data.content}</p>
+                        ${data.link ? `
+                            <a href="${data.link}" target="_blank" class="inline-flex items-center px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-sm font-bold hover:bg-indigo-100 transition">
+                                <i class="fas fa-link mr-2"></i>查看相關連結或簡章
+                            </a>
+                        ` : ''}
+                        ${isAdmin ? `
+                            <button onclick="deletePost('${docSnap.id}')" class="absolute top-6 right-6 text-slate-300 hover:text-red-500 transition">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.openPostModal = () => document.getElementById('postModal').classList.remove('hidden');
+        window.closePostModal = () => document.getElementById('postModal').classList.add('hidden');
+
+        window.savePost = async () => {
+            const title = document.getElementById('postTitle').value;
+            const content = document.getElementById('postContent').value;
+            const link = document.getElementById('postLink').value;
+            const btn = document.getElementById('saveBtn');
+
+            if(!title || !content) return alert("請填寫公告標題與內容");
+            
+            btn.disabled = true;
+            btn.innerText = "處理中...";
+
+            try {
+                await addDoc(collection(db, "announcements"), {
+                    title, content, link,
+                    createdAt: serverTimestamp(),
+                    author: auth.currentUser.email
+                });
+                closePostModal();
+                loadAnnouncements();
+                document.getElementById('postTitle').value = '';
+                document.getElementById('postContent').value = '';
+                document.getElementById('postLink').value = '';
+            } catch (e) {
+                alert("發布失敗，請聯繫管理員");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "確認發布";
+            }
+        };
+
+        window.deletePost = async (id) => {
+            if(confirm("確定要刪除這則公告嗎？")) {
+                await deleteDoc(doc(db, "announcements", id));
+                loadAnnouncements();
+            }
+        };
+
+        // ---------------- 身份驗證 ----------------
+        window.handleAuth = () => signInWithPopup(auth, provider).catch(err => alert("登入失敗"));
+        window.logout = () => signOut(auth);
+
+        onAuthStateChanged(auth, (user) => {
+            const loginBtn = document.getElementById('loginBtn');
+            const adminPanel = document.getElementById('adminPanel');
+            const addPostBtn = document.getElementById('addPostBtn');
+            const userName = document.getElementById('userName');
+
+            if (user && ADMIN_EMAILS.includes(user.email)) {
+                loginBtn.classList.add('hidden');
+                adminPanel.classList.remove('hidden');
+                addPostBtn.classList.remove('hidden');
+                userName.innerText = user.displayName.split(' ')[0];
+            } else {
+                loginBtn.classList.remove('hidden');
+                adminPanel.classList.add('hidden');
+                addPostBtn.classList.add('hidden');
+                if(user) { alert("您無管理權限"); signOut(auth); }
+            }
+            // 登入狀態改變後重新加載公告(為了顯示/隱藏刪除按鈕)
+            if(document.getElementById('bulletin-section').classList.contains('hidden') === false) loadAnnouncements();
+        });
+
+        // 初始化
+        renderCalendar();
+        document.getElementById('weekly-highlights').innerHTML = `
+            <div class="p-5 highlight-this-week rounded-2xl shadow-sm border border-amber-100">
+                <div class="flex items-center text-amber-800 text-sm font-bold mb-2">
+                    <i class="fas fa-star mr-2"></i>本週焦點事項
+                </div>
+                <div class="text-slate-700 font-medium">115學測報名資料最後確認中，請同學務必留意個人資料正確性。</div>
+            </div>
+            <div class="p-5 highlight-next-week rounded-2xl shadow-sm border border-blue-100">
+                <div class="flex items-center text-blue-800 text-sm font-bold mb-2">
+                    <i class="fas fa-arrow-right mr-2"></i>下週預告
+                </div>
+                <div class="text-slate-700 font-medium">術科考試簡章預計下週一公告，請考生提早準備。</div>
+            </div>
+        `;
+    </script>
+</body>
+</html>
