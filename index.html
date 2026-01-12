@@ -15,54 +15,73 @@
         .recent-tag { background-color: #fef3c7; color: #92400e; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; margin-top: 8px; display: inline-block; }
         .timeline-item { position: relative; padding-left: 2rem; border-left: 2px solid #e2e8f0; margin-left: 1rem; padding-bottom: 1.5rem; }
         .timeline-item::before { content: ""; position: absolute; left: -7px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: #6366f1; border: 2px solid white; }
+        
+        /* 置頂公告特效 */
+        .pinned-alert { background: linear-gradient(to right, #fff1f2, #fff); border-left: 4px solid #f43f5e; animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="pb-20">
+<body class="pb-24">
 
     <nav class="sticky top-0 z-50 glass-nav">
         <div class="max-w-4xl mx-auto px-4 h-16 flex justify-between items-center">
             <div class="flex items-center space-x-2" onclick="location.reload()" style="cursor:pointer">
                 <div class="w-10 h-10 bg-indigo-700 rounded-xl flex items-center justify-center text-white shadow-lg"><i class="fas fa-university"></i></div>
-                <span class="font-bold text-slate-800 text-lg">小清華升學網</span>
+                <span class="font-bold text-slate-800 text-lg hidden md:block">小清華升學網</span>
             </div>
             <div class="flex items-center space-x-2 md:space-x-3">
-                <button onclick="window.showSection('home')" class="text-sm font-bold text-slate-600 px-2">行事曆</button>
-                <button onclick="window.showSection('bulletin')" class="text-sm font-bold text-slate-600 px-2">公告欄</button>
+                <button onclick="window.showSection('home')" class="text-sm font-bold text-slate-600 px-2">首頁</button>
+                <button onclick="window.showSection('bulletin')" class="text-sm font-bold text-slate-600 px-2">公告</button>
+                
                 <button id="loginBtn" onclick="window.handleAuth()" class="bg-indigo-50 text-indigo-700 px-4 py-1.5 rounded-full text-xs font-bold border border-indigo-100">管理</button>
                 <div id="adminPanel" class="hidden flex items-center space-x-2">
-                    <span id="userName" class="text-xs font-bold text-indigo-600 hidden md:inline"></span>
-                    <button onclick="window.handleLogout()" class="text-xs text-red-500 font-bold">登出</button>
+                    <button onclick="window.openLinkManager()" class="text-xs bg-slate-100 px-3 py-1.5 rounded-lg font-bold text-slate-600"><i class="fas fa-link mr-1"></i>連結</button>
+                    <button onclick="window.handleLogout()" class="text-xs text-red-500 font-bold px-2">登出</button>
                 </div>
             </div>
         </div>
     </nav>
 
-    <main class="max-w-4xl mx-auto px-4 py-8">
+    <main class="max-w-4xl mx-auto px-4 py-6">
+        
         <section id="home-section">
-            <div class="flex justify-between items-end mb-6">
+            
+            <div id="pinned-section" class="mb-8 hidden">
+                <h3 class="text-sm font-bold text-red-500 mb-2 flex items-center"><i class="fas fa-bullhorn mr-2"></i>重要消息通知</h3>
+                <div id="pinned-list" class="space-y-3">
+                    </div>
+            </div>
+
+            <div class="flex justify-between items-end mb-4">
                 <div>
-                    <h2 class="text-2xl font-bold text-slate-900">115學年度升學行事曆</h2>
-                    <p class="text-slate-500 text-sm mt-1">智慧顯示：自動標註最近的重要時程</p>
+                    <h2 class="text-2xl font-bold text-slate-900">升學行事曆</h2>
+                    <p class="text-slate-500 text-sm">智慧顯示：自動標註最近的重要時程</p>
                 </div>
-                <button id="addSchoolBtn" class="hidden bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg transition transform active:scale-95" onclick="window.openSchoolModal(null)">
+                <button id="addSchoolBtn" class="hidden bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg" onclick="window.openSchoolModal(null)">
                     <i class="fas fa-plus mr-1"></i>新增校系
                 </button>
             </div>
 
-            <div class="flex bg-slate-200/50 p-1 rounded-2xl mb-8 max-w-sm">
+            <div class="flex bg-slate-200/50 p-1 rounded-2xl mb-6 max-w-sm">
                 <button onclick="window.switchTab('sheet1')" id="tab-sheet1" class="flex-1 py-2.5 text-center rounded-xl font-bold transition-all bg-indigo-600 text-white">採計學測</button>
                 <button onclick="window.switchTab('sheet2')" id="tab-sheet2" class="flex-1 py-2.5 text-center rounded-xl font-bold transition-all text-slate-500">獨立招生</button>
             </div>
 
-            <div id="calendar-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div id="calendar-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
                 <div class="col-span-2 text-center py-10 text-slate-400">正在讀取最新資料...</div>
+            </div>
+
+            <div class="border-t border-slate-200 pt-8">
+                <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center"><i class="fas fa-external-link-alt mr-2 text-slate-400"></i>推薦外部資源</h3>
+                <div id="external-links-grid" class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    </div>
             </div>
         </section>
 
         <section id="bulletin-section" class="hidden">
             <div class="flex justify-between items-center mb-8">
                 <h2 class="text-2xl font-bold text-slate-800">最新公告</h2>
-                <button id="addPostBtn" class="hidden bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold" onclick="window.openPostModal()">發布公告</button>
+                <button id="addPostBtn" class="hidden bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold" onclick="window.openPostModal(null)">發布公告</button>
             </div>
             <div id="announcement-list" class="space-y-4"></div>
         </section>
@@ -76,7 +95,7 @@
             </div>
             <div id="detailTimeline"></div>
             <div id="adminEditPlaceholder" class="mt-6 pt-6 border-t border-slate-100 hidden">
-                <button id="quickEditBtn" class="w-full py-3 bg-indigo-50 text-indigo-600 rounded-xl font-bold hover:bg-indigo-100 transition">
+                <button id="quickEditBtn" class="w-full py-3 bg-indigo-50 text-indigo-600 rounded-xl font-bold">
                     <i class="fas fa-edit mr-2"></i>編輯此卡片內容
                 </button>
             </div>
@@ -86,7 +105,7 @@
     <div id="schoolModal" class="fixed inset-0 bg-slate-900/60 hidden z-[110] flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl overflow-hidden">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-slate-800" id="modalTitle">編輯行事曆</h3>
+                <h3 class="text-xl font-bold text-slate-800" id="schoolModalTitle">編輯行事曆</h3>
                 <button onclick="window.closeSchoolModal()" class="text-slate-400"><i class="fas fa-times"></i></button>
             </div>
             <div class="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
@@ -95,23 +114,62 @@
                 <div>
                     <label class="text-xs font-bold text-slate-400">校系名稱</label>
                     <input type="text" id="schoolName" class="w-full px-4 py-2 bg-slate-50 border rounded-xl outline-none font-bold text-slate-700">
-                    <p class="text-[10px] text-slate-400 mt-1">* 若名稱與預設資料相同，將會覆蓋預設顯示</p>
                 </div>
                 <div id="eventInputs" class="space-y-2"></div>
-                <button onclick="window.addEventInput()" class="w-full py-2 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 text-xs font-bold hover:bg-slate-50">+ 新增一行時程</button>
+                <button onclick="window.addEventInput()" class="w-full py-2 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 text-xs font-bold hover:bg-slate-50">+ 新增時程</button>
             </div>
             <div class="flex space-x-3 pt-6 border-t mt-6">
                 <button onclick="window.closeSchoolModal()" class="flex-1 py-3 font-bold text-slate-400">取消</button>
-                <button id="saveSchoolBtn" class="flex-[2] bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition">儲存</button>
+                <button id="saveSchoolBtn" class="flex-[2] bg-indigo-600 text-white py-3 rounded-xl font-bold">儲存</button>
                 <button id="deleteSchoolBtn" onclick="window.deleteSchool()" class="hidden px-4 py-3 bg-red-50 text-red-500 rounded-xl font-bold"><i class="fas fa-trash"></i></button>
             </div>
+        </div>
+    </div>
+
+    <div id="postModal" class="fixed inset-0 bg-slate-900/60 hidden z-[110] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl">
+            <h3 class="text-xl font-bold mb-4 text-slate-800" id="postModalTitle">發布公告</h3>
+            <input type="hidden" id="editPostId">
+            <div class="space-y-4">
+                <input type="text" id="postTitle" placeholder="公告標題" class="w-full px-4 py-3 bg-slate-50 border rounded-xl outline-none font-bold">
+                <textarea id="postContent" rows="5" placeholder="詳細內容..." class="w-full px-4 py-3 bg-slate-50 border rounded-xl outline-none"></textarea>
+                <div class="flex items-center space-x-2 bg-red-50 p-3 rounded-xl border border-red-100">
+                    <input type="checkbox" id="postPinned" class="w-5 h-5 text-red-600 rounded focus:ring-red-500">
+                    <label for="postPinned" class="text-sm font-bold text-red-700">設為首頁重要置頂 (通知)</label>
+                </div>
+                <div class="flex space-x-3 pt-2">
+                    <button onclick="window.closePostModal()" class="flex-1 py-3 text-slate-400 font-bold">取消</button>
+                    <button id="savePostBtn" class="flex-[2] bg-indigo-600 text-white py-3 rounded-xl font-bold">發布公告</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="linkModal" class="fixed inset-0 bg-slate-900/60 hidden z-[110] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-slate-800">管理推薦連結</h3>
+                <button onclick="window.closeLinkModal()" class="text-slate-400"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 mb-6">
+                <h4 class="text-xs font-bold text-slate-400 mb-2 uppercase">新增連結</h4>
+                <div class="space-y-2">
+                    <input type="text" id="newLinkName" placeholder="網站名稱 (如：甄選策略)" class="w-full px-3 py-2 border rounded-lg text-sm">
+                    <input type="text" id="newLinkUrl" placeholder="網址 (https://...)" class="w-full px-3 py-2 border rounded-lg text-sm">
+                    <button onclick="window.addLink()" class="w-full py-2 bg-slate-800 text-white rounded-lg text-sm font-bold">新增至列表</button>
+                </div>
+            </div>
+
+            <div class="max-h-[30vh] overflow-y-auto space-y-2" id="manageLinkList">
+                </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, getDocs, doc, setDoc, addDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, doc, setDoc, addDoc, deleteDoc, updateDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBJPnmqXZdJDryceCIOiebx9yX5vU-tB2Q",
@@ -129,16 +187,14 @@
         const provider = new GoogleAuthProvider();
         const ADMIN_EMAILS = ["ljuzem115@ppsh.ptc.edu.tw", "fuwen@ppsh.ptc.edu.tw", "jinglan@ppsh.ptc.edu.tw", "tulip520@ppsh.ptc.edu.tw"];
 
-        // --- 預設完整資料 ---
+        // --- 預設行事曆資料 ---
         const EXCEL_DATA = [
-            // Sheet 1 (學測)
             {type:'sheet1', name:'師範原民', events:[{m:'12', d:'01-08', e:'網路報名'},{m:'3', d:'12-14', e:'甄試日期'},{m:'3', d:'25', e:'放榜'}]},
             {type:'sheet1', name:'醫事原民', events:[{m:'2', d:'24-03/03', e:'網路報名'},{m:'3', d:'22', e:'口試'},{m:'4', d:'15', e:'放榜'}]},
             {type:'sheet1', name:'軍事學校', events:[{m:'3', d:'02-24', e:'正式報名'},{m:'4', d:'12', e:'學科測驗'},{m:'5', d:'05', e:'錄取公告'}]},
             {type:'sheet1', name:'警大', events:[{m:'3', d:'初旬', e:'網路報名'},{m:'5', d:'初旬', e:'初試(學測)'}]},
             {type:'sheet1', name:'繁星申請', events:[{m:'3', d:'11', e:'錄取公告'}]},
             {type:'sheet1', name:'個人申請', events:[{m:'3', d:'20-21', e:'一階報名'},{m:'3', d:'27', e:'一階篩選結果'}]},
-            // Sheet 2 (獨招)
             {type:'sheet2', name:'高師大', events:[{m:'12', d:'16-01/13', e:'網路報名'},{m:'1', d:'28', e:'列印應考證'},{m:'2', d:'07-08', e:'面試'},{m:'3', d:'02', e:'放榜'}]},
             {type:'sheet2', name:'屏東大學', events:[{m:'1', d:'05-03/03', e:'網路報名'},{m:'3', d:'16-22', e:'列印准考證'},{m:'3', d:'20-22', e:'面試'},{m:'4', d:'08', e:'放榜'}]},
             {type:'sheet2', name:'東華大學', events:[{m:'12', d:'16-01/06', e:'網路報名'},{m:'2', d:'07-09', e:'面試'},{m:'3', d:'04', e:'放榜'}]},
@@ -153,111 +209,252 @@
 
         let displaySchools = [];
         let currentTab = 'sheet1';
+        let pinnedPosts = [];
+        let externalLinks = [];
 
-        // --- 核心邏輯：合併預設與雲端資料 ---
+        // ================= 資料載入邏輯 =================
+
+        // 1. 載入並合併學校資料
         async function loadSchools() {
             let merged = JSON.parse(JSON.stringify(EXCEL_DATA)).map((s, i) => ({ ...s, id: 'def_' + i }));
             try {
                 const snap = await getDocs(collection(db, "calendar_db"));
                 snap.forEach(doc => {
-                    const cloudData = doc.data();
-                    const index = merged.findIndex(local => local.name === cloudData.name && local.type === cloudData.type);
-                    if(index !== -1) {
-                        merged[index] = { id: doc.id, ...cloudData };
-                    } else {
-                        merged.push({ id: doc.id, ...cloudData });
-                    }
+                    const cloud = doc.data();
+                    const idx = merged.findIndex(l => l.name === cloud.name && l.type === cloud.type);
+                    if(idx !== -1) merged[idx] = { id: doc.id, ...cloud };
+                    else merged.push({ id: doc.id, ...cloud });
                 });
-            } catch (e) { console.error("Load error:", e); }
+            } catch(e) {}
             displaySchools = merged;
             renderGrid();
         }
 
-        // --- 安全的日期解析 (防崩潰) ---
-        function parseMonth(val) {
-            if(!val) return 99;
-            const match = val.toString().match(/\d+/);
-            return match ? parseInt(match[0]) : 99;
+        // 2. 載入公告 (含置頂邏輯)
+        async function loadAnnouncements() {
+            const list = document.getElementById('announcement-list');
+            const pinnedList = document.getElementById('pinned-list');
+            const pinnedSection = document.getElementById('pinned-section');
+            
+            try {
+                const q = query(collection(db, "announcements"), orderBy("createdAt", "desc"));
+                const snap = await getDocs(q);
+                const posts = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                
+                // 分離置頂與一般
+                const pinned = posts.filter(p => p.isPinned);
+                const normal = posts.filter(p => !p.isPinned);
+
+                // 渲染置頂區 (首頁)
+                if (pinned.length > 0) {
+                    pinnedSection.classList.remove('hidden');
+                    pinnedList.innerHTML = pinned.map(p => `
+                        <div class="pinned-alert p-4 rounded-xl shadow-sm cursor-pointer" onclick="window.showSection('bulletin')">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <span class="bg-red-100 text-red-600 text-[10px] px-2 py-1 rounded-full font-bold mb-1 inline-block">重要通知</span>
+                                    <h4 class="font-bold text-slate-800 text-md">${p.title}</h4>
+                                    <p class="text-slate-600 text-xs mt-1 line-clamp-2">${p.content}</p>
+                                </div>
+                                <i class="fas fa-chevron-right text-slate-300 mt-2"></i>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    pinnedSection.classList.add('hidden');
+                }
+
+                // 渲染公告欄 (一般區)
+                list.innerHTML = posts.map(p => `
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm relative group">
+                        ${p.isPinned ? '<div class="absolute -left-1 top-4 w-1 h-8 bg-red-500 rounded-r-full"></div>' : ''}
+                        <div class="text-[10px] text-slate-400 mb-1 flex items-center">
+                            <span>${p.createdAt ? new Date(p.createdAt.toDate()).toLocaleDateString() : '剛剛'}</span>
+                            ${p.isPinned ? '<span class="ml-2 text-red-500 font-bold"><i class="fas fa-thumbtack mr-1"></i>置頂</span>' : ''}
+                        </div>
+                        <h4 class="font-bold text-lg text-slate-800 mb-2">${p.title}</h4>
+                        <p class="text-slate-600 text-sm whitespace-pre-wrap leading-relaxed">${p.content}</p>
+                        
+                        ${auth.currentUser && ADMIN_EMAILS.includes(auth.currentUser.email) ? `
+                            <div class="mt-4 pt-3 border-t border-slate-50 flex justify-end space-x-3">
+                                <button onclick="window.openPostModal('${p.id}')" class="text-indigo-400 text-xs font-bold hover:text-indigo-600">編輯</button>
+                                <button onclick="window.deletePost('${p.id}')" class="text-slate-400 text-xs font-bold hover:text-red-500">刪除</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `).join('');
+            } catch(e) { console.error(e); }
         }
+
+        // 3. 載入外部連結
+        async function loadLinks() {
+            try {
+                const snap = await getDocs(collection(db, "external_links"));
+                externalLinks = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                renderLinks();
+            } catch(e) {}
+        }
+
+        // ================= 渲染邏輯 =================
+        function parseMonth(val) { const m = val.toString().match(/\d+/); return m ? parseInt(m[0]) : 99; }
 
         function renderGrid() {
             const container = document.getElementById('calendar-grid');
             const filtered = displaySchools.filter(s => s.type === currentTab);
-            
-            if(filtered.length === 0) {
-                container.innerHTML = `<div class="col-span-2 text-center text-slate-400 py-10">此區塊尚無資料</div>`;
-                return;
-            }
-
             container.innerHTML = filtered.map(s => {
-                // 容錯的近期活動計算
-                let recentText = "查看詳情";
-                let recentTime = null;
-                const now = new Date();
-                const year = 2026;
-
-                if (s.events && s.events.length > 0) {
+                let recentText = "查看詳情", recentTime = null, now = new Date(), year = 2026;
+                if (s.events?.length) {
                     let closest = null;
                     for (let ev of s.events) {
                         const m = parseMonth(ev.m);
-                        if (m === 99) continue;
-                        // 假設日期為每個月28日作為比對基準，避免日期格式錯誤導致計算失敗
-                        const d = new Date(year, m - 1, 28);
-                        if (d >= now) { closest = ev; break; }
+                        if (m!==99 && new Date(year, m-1, 28) >= now) { closest = ev; break; }
                     }
-                    if (closest) {
-                        recentText = `${closest.m}月 ${closest.e}`;
-                        recentTime = closest;
-                    } else {
-                        // 如果都過期了，顯示最後一個
-                        const last = s.events[s.events.length - 1];
-                        recentText = `${last.m}月 ${last.e} (已過)`;
-                        recentTime = last;
-                    }
+                    if (closest) { recentText = `${closest.m}月 ${closest.e}`; recentTime = closest; }
+                    else { const last = s.events[s.events.length-1]; recentText = `${last.m}月 ${last.e} (已過)`; }
                 }
-
                 return `
                 <div class="school-card" onclick="window.openDetail('${s.id}')">
                     <div>
                         <h3 class="text-lg font-bold text-slate-800">${s.name}</h3>
                         <div class="text-indigo-500 text-[10px] font-bold mt-1 uppercase tracking-widest">${currentTab==='sheet1'?'學測':'獨招'}</div>
-                        <div class="recent-tag">
-                            <i class="far fa-clock mr-1"></i> ${recentTime ? (recentTime.m+'/'+recentTime.d+' '+recentTime.e) : recentText}
-                        </div>
+                        <div class="recent-tag"><i class="far fa-clock mr-1"></i> ${recentText}</div>
                     </div>
                     <div class="mt-4 flex items-center text-slate-400 text-[10px] font-medium border-t pt-3">
-                        <span>點擊查看完整時程</span>
-                        <i class="fas fa-arrow-right ml-auto"></i>
+                        <span>查看時程</span> <i class="fas fa-arrow-right ml-auto"></i>
                     </div>
                 </div>`;
             }).join('');
         }
 
-        // --- 編輯/新增視窗邏輯 ---
-        window.openSchoolModal = (id = null) => {
-            const inputs = document.getElementById('eventInputs');
-            inputs.innerHTML = '';
-            const deleteBtn = document.getElementById('deleteSchoolBtn');
+        function renderLinks() {
+            const grid = document.getElementById('external-links-grid');
+            const list = document.getElementById('manageLinkList');
+            
+            // 首頁顯示
+            grid.innerHTML = externalLinks.map(l => `
+                <a href="${l.url}" target="_blank" class="bg-white border border-slate-200 p-3 rounded-xl flex items-center space-x-2 hover:border-indigo-500 hover:shadow-md transition group">
+                    <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-600"><i class="fas fa-link text-xs"></i></div>
+                    <span class="text-sm font-bold text-slate-700 group-hover:text-indigo-600 truncate">${l.name}</span>
+                </a>
+            `).join('');
 
+            // 管理列表顯示
+            list.innerHTML = externalLinks.map(l => `
+                <div class="flex justify-between items-center bg-white p-3 rounded-lg border border-slate-100">
+                    <div>
+                        <div class="font-bold text-sm text-slate-800">${l.name}</div>
+                        <div class="text-xs text-slate-400 truncate max-w-[150px]">${l.url}</div>
+                    </div>
+                    <button onclick="window.deleteLink('${l.id}')" class="text-red-300 hover:text-red-500 px-2"><i class="fas fa-trash"></i></button>
+                </div>
+            `).join('');
+        }
+
+        // ================= 公告管理 (含置頂) =================
+        window.openPostModal = (id = null) => {
             if(id) {
                 // 編輯模式
+                const q = query(collection(db, "announcements")); // 這裡偷懶直接遍歷cache，正式應fetch single
+                getDocs(q).then(snap => {
+                    const post = snap.docs.find(d => d.id === id).data();
+                    document.getElementById('editPostId').value = id;
+                    document.getElementById('postTitle').value = post.title;
+                    document.getElementById('postContent').value = post.content;
+                    document.getElementById('postPinned').checked = post.isPinned || false;
+                    document.getElementById('postModalTitle').innerText = "編輯公告";
+                    document.getElementById('savePostBtn').innerText = "更新公告";
+                    document.getElementById('postModal').classList.remove('hidden');
+                });
+            } else {
+                // 新增模式
+                document.getElementById('editPostId').value = '';
+                document.getElementById('postTitle').value = '';
+                document.getElementById('postContent').value = '';
+                document.getElementById('postPinned').checked = false;
+                document.getElementById('postModalTitle').innerText = "發布公告";
+                document.getElementById('savePostBtn').innerText = "發布公告";
+                document.getElementById('postModal').classList.remove('hidden');
+            }
+        };
+
+        document.getElementById('savePostBtn').onclick = async () => {
+            const id = document.getElementById('editPostId').value;
+            const title = document.getElementById('postTitle').value;
+            const content = document.getElementById('postContent').value;
+            const isPinned = document.getElementById('postPinned').checked;
+
+            if(!title) return alert("請輸入標題");
+            
+            const data = { title, content, isPinned, createdAt: serverTimestamp(), author: auth.currentUser.email };
+            
+            try {
+                if(id) await setDoc(doc(db, "announcements", id), data, { merge: true });
+                else await addDoc(collection(db, "announcements"), data);
+                
+                alert("公告已處理！");
+                window.closePostModal();
+                loadAnnouncements();
+            } catch(e) { alert("錯誤: " + e.message); }
+        };
+
+        window.deletePost = async (id) => {
+            if(confirm("確定刪除此公告？")) {
+                await deleteDoc(doc(db, "announcements", id));
+                loadAnnouncements();
+            }
+        };
+
+        // ================= 連結管理 =================
+        window.openLinkManager = () => document.getElementById('linkModal').classList.remove('hidden');
+        window.closeLinkModal = () => document.getElementById('linkModal').classList.add('hidden');
+        
+        window.addLink = async () => {
+            const name = document.getElementById('newLinkName').value;
+            const url = document.getElementById('newLinkUrl').value;
+            if(!name || !url) return alert("請輸入完整資訊");
+            await addDoc(collection(db, "external_links"), { name, url, createdAt: serverTimestamp() });
+            document.getElementById('newLinkName').value = '';
+            document.getElementById('newLinkUrl').value = '';
+            loadLinks();
+        };
+
+        window.deleteLink = async (id) => {
+            if(confirm("移除此連結？")) {
+                await deleteDoc(doc(db, "external_links", id));
+                loadLinks();
+            }
+        };
+
+        // ================= 其他校系管理與工具 =================
+        window.openDetail = (id) => {
+            const s = displaySchools.find(item => item.id === id);
+            const isAdmin = auth.currentUser && ADMIN_EMAILS.includes(auth.currentUser.email);
+            document.getElementById('detailHeader').innerHTML = `<h3 class="text-2xl font-bold text-slate-800">${s.name}</h3>`;
+            document.getElementById('detailTimeline').innerHTML = (s.events||[]).map(e => `
+                <div class="timeline-item"><div class="text-[10px] font-bold text-indigo-500">${e.m}月 / ${e.d}</div><div class="text-slate-800 font-bold">${e.e}</div></div>`).join('');
+            const adminBox = document.getElementById('adminEditPlaceholder');
+            if(isAdmin) { adminBox.classList.remove('hidden'); document.getElementById('quickEditBtn').onclick = () => { window.closeDetail(); window.openSchoolModal(id); }; } 
+            else { adminBox.classList.add('hidden'); }
+            document.getElementById('detailModal').classList.remove('hidden');
+        };
+
+        window.openSchoolModal = (id = null) => {
+            document.getElementById('eventInputs').innerHTML = '';
+            const deleteBtn = document.getElementById('deleteSchoolBtn');
+            if(id) {
                 const s = displaySchools.find(item => item.id === id);
                 document.getElementById('editSchoolId').value = id;
                 document.getElementById('editSchoolType').value = s.type;
                 document.getElementById('schoolName').value = s.name;
-                document.getElementById('modalTitle').innerText = "編輯行事曆";
+                document.getElementById('schoolModalTitle').innerText = "編輯行事曆";
                 if(s.events) s.events.forEach(e => window.addEventInput(e.m, e.d, e.e));
-                
-                // 顯示刪除按鈕 (即使是預設資料，若已覆寫至雲端則可刪除雲端版回復預設，此處簡化為皆可操作)
-                deleteBtn.classList.remove('hidden'); 
+                deleteBtn.classList.remove('hidden');
             } else {
-                // 新增模式
                 document.getElementById('editSchoolId').value = '';
-                // 確保新增的卡片是在當前的分頁 (sheet1 或 sheet2)
                 document.getElementById('editSchoolType').value = currentTab;
                 document.getElementById('schoolName').value = '';
-                document.getElementById('modalTitle').innerText = "新增校系";
-                ['報名','面試','放榜'].forEach(label => window.addEventInput('', '', label));
+                document.getElementById('schoolModalTitle').innerText = "新增校系";
+                ['報名','面試','放榜'].forEach(l => window.addEventInput('', '', l));
                 deleteBtn.classList.add('hidden');
             }
             document.getElementById('schoolModal').classList.remove('hidden');
@@ -273,64 +470,29 @@
         document.getElementById('saveSchoolBtn').onclick = async () => {
             const id = document.getElementById('editSchoolId').value;
             const name = document.getElementById('schoolName').value;
-            const type = document.getElementById('editSchoolType').value; // 確保有抓到 type
-            const events = Array.from(document.getElementById('eventInputs').children).map(r => ({
-                m: r.children[0].value, d: r.children[1].value, e: r.children[2].value
-            }));
-
+            const type = document.getElementById('editSchoolType').value;
+            const events = Array.from(document.getElementById('eventInputs').children).map(r => ({ m: r.children[0].value, d: r.children[1].value, e: r.children[2].value }));
             if(!name) return alert("請輸入名稱");
-
             try {
                 const data = { name, events, type, updatedAt: serverTimestamp() };
-
-                if (id && !id.startsWith('def_')) {
-                    // 更新已存在的雲端資料
-                    await setDoc(doc(db, "calendar_db", id), data);
-                } else {
-                    // 新增 (無論是全新的，或是第一次編輯預設的)
-                    await addDoc(collection(db, "calendar_db"), data);
-                }
-                alert("儲存成功！");
-                window.closeSchoolModal();
-                loadSchools();
+                if (id && !id.startsWith('def_')) await setDoc(doc(db, "calendar_db", id), data);
+                else await addDoc(collection(db, "calendar_db"), data);
+                alert("儲存成功！"); window.closeSchoolModal(); loadSchools();
             } catch (e) { alert("儲存失敗: " + e.message); }
         };
 
         window.deleteSchool = async () => {
             const id = document.getElementById('editSchoolId').value;
-            if(!id.startsWith('def_') && confirm("確定要刪除這筆自定義資料嗎？")) {
-                await deleteDoc(doc(db, "calendar_db", id));
-                window.closeSchoolModal();
-                loadSchools();
-            } else if(id.startsWith('def_')) {
-                alert("預設資料無法完全刪除，但您可以編輯它。");
-            }
+            if(!id.startsWith('def_') && confirm("刪除此資料？")) { await deleteDoc(doc(db, "calendar_db", id)); window.closeSchoolModal(); loadSchools(); }
         };
 
-        // --- 其他功能 ---
-        window.openDetail = (id) => {
-            const s = displaySchools.find(item => item.id === id);
-            const isAdmin = auth.currentUser && ADMIN_EMAILS.includes(auth.currentUser.email);
-            document.getElementById('detailHeader').innerHTML = `<h3 class="text-2xl font-bold text-slate-800">${s.name}</h3>`;
-            document.getElementById('detailTimeline').innerHTML = (s.events||[]).map(e => `
-                <div class="timeline-item">
-                    <div class="text-[10px] font-bold text-indigo-500">${e.m}月 / ${e.d}</div>
-                    <div class="text-slate-800 font-bold">${e.e}</div>
-                </div>`).join('');
-            
-            const adminBox = document.getElementById('adminEditPlaceholder');
-            if(isAdmin) {
-                adminBox.classList.remove('hidden');
-                document.getElementById('quickEditBtn').onclick = () => { window.closeDetail(); window.openSchoolModal(id); };
-            } else { adminBox.classList.add('hidden'); }
-            document.getElementById('detailModal').classList.remove('hidden');
-        };
-
+        // --- 全域工具 ---
         window.closeDetail = () => document.getElementById('detailModal').classList.add('hidden');
         window.closeSchoolModal = () => document.getElementById('schoolModal').classList.add('hidden');
+        window.closePostModal = () => document.getElementById('postModal').classList.add('hidden');
         window.handleAuth = () => signInWithPopup(auth, provider);
         window.handleLogout = () => signOut(auth);
-        window.switchTab = (tab) => { currentTab = tab; loadSchools(); }; // 切換時重整
+        window.switchTab = (tab) => { currentTab = tab; loadSchools(); };
         window.showSection = (s) => { document.getElementById('home-section').classList.toggle('hidden', s !== 'home'); document.getElementById('bulletin-section').classList.toggle('hidden', s !== 'bulletin'); };
 
         onAuthStateChanged(auth, (user) => {
@@ -338,11 +500,11 @@
             document.getElementById('loginBtn').classList.toggle('hidden', isAdmin);
             document.getElementById('adminPanel').classList.toggle('hidden', !isAdmin);
             document.getElementById('addSchoolBtn').classList.toggle('hidden', !isAdmin);
-            if(isAdmin) document.getElementById('userName').innerText = user.displayName;
+            document.getElementById('addPostBtn').classList.toggle('hidden', !isAdmin);
             loadSchools();
+            loadAnnouncements();
+            loadLinks();
         });
-
-        loadSchools();
     </script>
 </body>
 </html>
