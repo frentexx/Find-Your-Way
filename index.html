@@ -10,7 +10,7 @@
     <style>
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; color: #1e293b; }
         .glass-nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border-bottom: 1px solid #e2e8f0; }
-        .school-card { cursor: pointer; transition: all 0.2s; border: 1px solid #f1f5f9; background: white; border-radius: 1.25rem; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; min-height: 160px; }
+        .school-card { cursor: pointer; transition: all 0.2s; border: 1px solid #f1f5f9; background: white; border-radius: 1.25rem; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; min-height: 160px; position: relative; }
         .school-card:hover { transform: translateY(-4px); box-shadow: 0 12px 20px -5px rgba(0,0,0,0.1); border-color: #6366f1; }
         .recent-tag { background-color: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; margin-top: 8px; display: inline-block; }
         .timeline-item { position: relative; padding-left: 2rem; border-left: 2px solid #e2e8f0; margin-left: 1rem; padding-bottom: 1.5rem; }
@@ -75,7 +75,9 @@
             </div>
             <div id="detailTimeline"></div>
             <div id="adminEditPlaceholder" class="mt-6 pt-6 border-t border-slate-100 hidden">
-                <button id="quickEditBtn" class="w-full py-3 bg-indigo-50 text-indigo-600 rounded-xl font-bold">進入編輯模式</button>
+                <button id="quickEditBtn" class="w-full py-3 bg-indigo-50 text-indigo-600 rounded-xl font-bold">
+                    <i class="fas fa-edit mr-2"></i>編輯此卡片內容
+                </button>
             </div>
         </div>
     </div>
@@ -83,21 +85,23 @@
     <div id="schoolModal" class="fixed inset-0 bg-slate-900/60 hidden z-[110] flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl overflow-hidden">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-slate-800" id="modalTitle">新增/編輯校系</h3>
+                <h3 class="text-xl font-bold text-slate-800" id="modalTitle">編輯行事曆</h3>
                 <button onclick="window.closeSchoolModal()" class="text-slate-400"><i class="fas fa-times"></i></button>
             </div>
             <div class="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
                 <input type="hidden" id="editSchoolId">
+                <input type="hidden" id="editSchoolType">
                 <div>
-                    <label class="text-xs font-bold text-slate-400">校系名稱</label>
-                    <input type="text" id="schoolName" class="w-full px-4 py-2 bg-slate-50 border rounded-xl outline-none">
+                    <label class="text-xs font-bold text-slate-400">校系名稱 (若為預設學校請勿更名)</label>
+                    <input type="text" id="schoolName" class="w-full px-4 py-2 bg-slate-50 border rounded-xl outline-none font-bold text-slate-700">
                 </div>
                 <div id="eventInputs" class="space-y-2"></div>
-                <button onclick="window.addEventInput()" class="w-full py-2 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 text-xs font-bold">+ 新增時程節點</button>
+                <button onclick="window.addEventInput()" class="w-full py-2 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 text-xs font-bold hover:bg-slate-50">+ 新增一行時程</button>
             </div>
             <div class="flex space-x-3 pt-6 border-t mt-6">
                 <button onclick="window.closeSchoolModal()" class="flex-1 py-3 font-bold text-slate-400">取消</button>
-                <button id="saveSchoolBtn" class="flex-[2] bg-indigo-600 text-white py-3 rounded-xl font-bold">同步到雲端</button>
+                <button id="saveSchoolBtn" class="flex-[2] bg-indigo-600 text-white py-3 rounded-xl font-bold">儲存變更</button>
+                <button id="deleteSchoolBtn" onclick="window.deleteSchool()" class="hidden px-4 py-3 bg-red-50 text-red-500 rounded-xl font-bold"><i class="fas fa-trash"></i></button>
             </div>
         </div>
     </div>
@@ -123,16 +127,16 @@
         const provider = new GoogleAuthProvider();
         const ADMIN_EMAILS = ["ljuzem115@ppsh.ptc.edu.tw", "fuwen@ppsh.ptc.edu.tw", "jinglan@ppsh.ptc.edu.tw", "tulip520@ppsh.ptc.edu.tw"];
 
-        // --- 完整校對 Excel 後的預設資料 ---
+        // --- 預設完整資料 (作為基底) ---
         const EXCEL_DATA = [
-            // Sheet 1: 採計學測 (6個)
+            // Sheet 1
             {type:'sheet1', name:'師範原民', events:[{m:'12', d:'01-08', e:'網路報名'},{m:'3', d:'12-14', e:'甄試日期'},{m:'3', d:'25', e:'放榜'}]},
             {type:'sheet1', name:'醫事原民', events:[{m:'2', d:'24-03/03', e:'網路報名'},{m:'3', d:'22', e:'口試'},{m:'4', d:'15', e:'放榜'}]},
             {type:'sheet1', name:'軍事學校', events:[{m:'3', d:'02-24', e:'正式報名'},{m:'4', d:'12', e:'學科測驗'},{m:'5', d:'05', e:'錄取公告'}]},
             {type:'sheet1', name:'警大', events:[{m:'3', d:'初旬', e:'網路報名'},{m:'5', d:'初旬', e:'初試(學測)'}]},
             {type:'sheet1', name:'繁星申請', events:[{m:'3', d:'11', e:'錄取公告'}]},
             {type:'sheet1', name:'個人申請', events:[{m:'3', d:'20-21', e:'一階報名'},{m:'3', d:'27', e:'一階篩選結果'}]},
-            // Sheet 2: 獨立招生 (10個)
+            // Sheet 2
             {type:'sheet2', name:'高師大', events:[{m:'12', d:'16-01/13', e:'網路報名'},{m:'1', d:'28', e:'列印應考證'},{m:'2', d:'07-08', e:'面試'},{m:'3', d:'02', e:'放榜'}]},
             {type:'sheet2', name:'屏東大學', events:[{m:'1', d:'05-03/03', e:'網路報名'},{m:'3', d:'16-22', e:'列印准考證'},{m:'3', d:'20-22', e:'面試'},{m:'4', d:'08', e:'放榜'}]},
             {type:'sheet2', name:'東華大學', events:[{m:'12', d:'16-01/06', e:'網路報名'},{m:'2', d:'07-09', e:'面試'},{m:'3', d:'04', e:'放榜'}]},
@@ -145,65 +149,79 @@
             {type:'sheet2', name:'警專', events:[{m:'3', d:'中旬', e:'網路報名'},{m:'5', d:'中旬', e:'初試'}]}
         ];
 
-        let schools = [];
-        let currentTab = 'sheet1';
+        let displaySchools = []; // 最終顯示的資料
 
-        // --- 核心邏輯：計算最近時程 ---
-        function getRecentEvent(events) {
-            const now = new Date();
-            const year = 2026; // 以 115 學年度為例
-            let closest = events[0];
-            
-            for (let ev of events) {
-                const m = parseInt(ev.m);
-                if (isNaN(m)) continue;
-                const eventDate = new Date(year, m - 1, 28); // 概略判斷
-                if (eventDate >= now) { closest = ev; break; }
-            }
-            return closest;
-        }
-
+        // --- 核心邏輯：合併預設與雲端資料 ---
         async function loadSchools() {
+            // 1. 先複製一份乾淨的預設資料 (深拷貝)
+            let merged = JSON.parse(JSON.stringify(EXCEL_DATA)).map((s, i) => ({ ...s, id: 'def_' + i })); 
+            
             try {
+                // 2. 抓取雲端資料
                 const snap = await getDocs(collection(db, "calendar_db"));
-                schools = snap.empty ? EXCEL_DATA.map((s, i)=>({id:'def'+i, ...s})) : snap.docs.map(d=>({id:d.id, ...d.data()}));
-                renderGrid();
-            } catch (e) { schools = EXCEL_DATA.map((s, i)=>({id:'def'+i, ...s})); renderGrid(); }
+                
+                snap.forEach(doc => {
+                    const cloudData = doc.data();
+                    // 3. 比對：如果雲端資料的名稱在預設資料中有，就「覆蓋」它
+                    const index = merged.findIndex(local => local.name === cloudData.name && local.type === cloudData.type);
+                    
+                    if(index !== -1) {
+                        // 覆蓋舊資料 (但保留雲端的 ID 以便下次編輯)
+                        merged[index] = { id: doc.id, ...cloudData };
+                    } else {
+                        // 如果是全新的學校，就加入陣列
+                        merged.push({ id: doc.id, ...cloudData });
+                    }
+                });
+                
+            } catch (e) {
+                console.error("雲端讀取失敗，僅顯示預設資料", e);
+            }
+
+            displaySchools = merged;
+            renderGrid();
         }
 
-        window.switchTab = (tab) => {
-            currentTab = tab;
-            document.getElementById('tab-sheet1').className = tab === 'sheet1' ? 'flex-1 py-2.5 text-center rounded-xl font-bold bg-indigo-600 text-white shadow-md' : 'flex-1 py-2.5 text-center rounded-xl font-bold text-slate-500';
-            document.getElementById('tab-sheet2').className = tab === 'sheet2' ? 'flex-1 py-2.5 text-center rounded-xl font-bold bg-indigo-600 text-white shadow-md' : 'flex-1 py-2.5 text-center rounded-xl font-bold text-slate-500';
-            renderGrid();
-        };
-
+        // --- 渲染畫面 ---
         function renderGrid() {
             const container = document.getElementById('calendar-grid');
-            const filtered = schools.filter(s => s.type === currentTab);
+            const filtered = displaySchools.filter(s => s.type === currentTab);
+            
             container.innerHTML = filtered.map(s => {
-                const recent = getRecentEvent(s.events);
+                // 計算近期活動
+                let recent = s.events[0];
+                const now = new Date();
+                const year = 2026;
+                for (let ev of s.events) {
+                    const m = parseInt(ev.m);
+                    if(!isNaN(m)) {
+                        const d = new Date(year, m - 1, 28);
+                        if(d >= now) { recent = ev; break; }
+                    }
+                }
+                
                 return `
                 <div class="school-card" onclick="window.openDetail('${s.id}')">
                     <div>
                         <h3 class="text-lg font-bold text-slate-800">${s.name}</h3>
                         <div class="text-indigo-500 text-[10px] font-bold mt-1 uppercase tracking-widest">${currentTab==='sheet1'?'學測':'獨招'}</div>
                         <div class="recent-tag">
-                            <i class="far fa-clock mr-1"></i> 近期：${recent.m}/${recent.d} ${recent.e}
+                            <i class="far fa-clock mr-1"></i> 近期：${recent ? (recent.m+'/'+recent.d+' '+recent.e) : '無近期活動'}
                         </div>
                     </div>
                     <div class="mt-4 flex items-center text-slate-400 text-[10px] font-medium border-t pt-3">
-                        <span>點擊查看完整時間軸</span>
+                        <span>查看完整時程</span>
                         <i class="fas fa-arrow-right ml-auto"></i>
                     </div>
                 </div>`;
             }).join('');
         }
 
-        // --- 全域掛載 ---
+        // --- 詳細頁面 & 編輯入口 ---
         window.openDetail = (id) => {
-            const s = schools.find(item => item.id === id);
+            const s = displaySchools.find(item => item.id === id);
             const isAdmin = auth.currentUser && ADMIN_EMAILS.includes(auth.currentUser.email);
+            
             document.getElementById('detailHeader').innerHTML = `<h3 class="text-2xl font-bold text-slate-800">${s.name}</h3>`;
             document.getElementById('detailTimeline').innerHTML = s.events.map(e => `
                 <div class="timeline-item">
@@ -212,23 +230,45 @@
                 </div>`).join('');
             
             const adminBox = document.getElementById('adminEditPlaceholder');
-            adminBox.classList.toggle('hidden', !isAdmin);
-            if(isAdmin) document.getElementById('quickEditBtn').onclick = () => { window.closeDetail(); window.openSchoolModal(id); };
+            if(isAdmin) {
+                adminBox.classList.remove('hidden');
+                // 按下編輯按鈕，直接開啟編輯視窗
+                document.getElementById('quickEditBtn').onclick = () => {
+                    window.closeDetail();
+                    window.openSchoolModal(id);
+                };
+            } else {
+                adminBox.classList.add('hidden');
+            }
+            
             document.getElementById('detailModal').classList.remove('hidden');
         };
 
+        // --- 編輯/新增視窗邏輯 ---
         window.openSchoolModal = (id = null) => {
             const inputs = document.getElementById('eventInputs');
             inputs.innerHTML = '';
-            if(id && id.length > 5) {
-                const s = schools.find(item => item.id === id);
-                document.getElementById('editSchoolId').value = id;
+            const deleteBtn = document.getElementById('deleteSchoolBtn');
+
+            if(id) {
+                // 編輯現有卡片
+                const s = displaySchools.find(item => item.id === id);
+                document.getElementById('editSchoolId').value = id; // 這可能是 'def_x' 或 firebase ID
+                document.getElementById('editSchoolType').value = s.type;
                 document.getElementById('schoolName').value = s.name;
+                document.getElementById('modalTitle').innerText = "編輯行事曆內容";
                 s.events.forEach(e => window.addEventInput(e.m, e.d, e.e));
+                
+                // 只有已經存在雲端的資料(ID不含def)，或是使用者想刪除某個預設資料時的邏輯(進階)，這邊簡化為：有ID就能刪
+                deleteBtn.classList.remove('hidden'); 
             } else {
+                // 新增全新卡片
                 document.getElementById('editSchoolId').value = '';
+                document.getElementById('editSchoolType').value = currentTab;
                 document.getElementById('schoolName').value = '';
+                document.getElementById('modalTitle').innerText = "新增校系行事曆";
                 ['報名','面試','放榜'].forEach(label => window.addEventInput('', '', label));
+                deleteBtn.classList.add('hidden');
             }
             document.getElementById('schoolModal').classList.remove('hidden');
         };
@@ -240,31 +280,67 @@
             document.getElementById('eventInputs').appendChild(div);
         };
 
+        // --- 儲存邏輯 (關鍵修正) ---
         document.getElementById('saveSchoolBtn').onclick = async () => {
             const id = document.getElementById('editSchoolId').value;
             const name = document.getElementById('schoolName').value;
-            const events = Array.from(document.getElementById('eventInputs').children).map(r => ({ m:r.children[0].value, d:r.children[1].value, e:r.children[2].value }));
+            const type = document.getElementById('editSchoolType').value;
+            const events = Array.from(document.getElementById('eventInputs').children).map(r => ({
+                m: r.children[0].value, d: r.children[1].value, e: r.children[2].value
+            }));
+
+            if(!name) return alert("請輸入名稱");
+
             try {
-                const data = { name, events, type: currentTab, updatedAt: serverTimestamp() };
-                if(id && id.length > 5) await setDoc(doc(db, "calendar_db", id), data);
-                else await addDoc(collection(db, "calendar_db"), data);
-                alert("儲存成功！"); window.closeSchoolModal(); loadSchools();
-            } catch (e) { alert("儲存失敗: " + e.message); }
+                const data = { name, events, type, updatedAt: serverTimestamp() };
+
+                // 判斷：這是更新舊的，還是新增的？
+                // 如果 id 是 'def_' 開頭，代表這是第一次編輯預設資料 -> 我們要在 Firebase 建立一筆新文件(addDoc)，但名字要一樣，這樣下次 loadSchools 就會覆蓋它。
+                // 如果 id 不是 'def_' 開頭，代表它已經在 Firebase 裡了 -> 用 setDoc 更新它。
+                
+                if (id && !id.startsWith('def_')) {
+                    // 更新已存在的雲端資料
+                    await setDoc(doc(db, "calendar_db", id), data);
+                } else {
+                    // 第一次編輯預設資料，或是新增全新資料 -> 都視為在雲端新增一筆
+                    // 注意：如果是編輯預設資料，name 必須保持一致，這樣合併邏輯才會生效
+                    await addDoc(collection(db, "calendar_db"), data);
+                }
+
+                alert("儲存成功！");
+                window.closeSchoolModal();
+                loadSchools(); // 重新讀取並合併
+            } catch (e) {
+                alert("儲存失敗: " + e.message);
+            }
         };
 
+        window.deleteSchool = async () => {
+            const id = document.getElementById('editSchoolId').value;
+            if(!id.startsWith('def_') && confirm("確定要從雲端刪除此資料嗎？")) {
+                await deleteDoc(doc(db, "calendar_db", id));
+                window.closeSchoolModal();
+                loadSchools();
+            } else if(id.startsWith('def_')) {
+                alert("這是系統預設資料，無法直接刪除，但您可以清空內容並隱藏。");
+            }
+        };
+
+        // --- 全域工具 ---
         window.closeDetail = () => document.getElementById('detailModal').classList.add('hidden');
         window.closeSchoolModal = () => document.getElementById('schoolModal').classList.add('hidden');
         window.handleAuth = () => signInWithPopup(auth, provider);
         window.handleLogout = () => signOut(auth);
+        window.switchTab = (tab) => { currentTab = tab; loadSchools(); }; // 切換分頁時重新渲染
         window.showSection = (s) => { document.getElementById('home-section').classList.toggle('hidden', s !== 'home'); document.getElementById('bulletin-section').classList.toggle('hidden', s !== 'bulletin'); };
 
         onAuthStateChanged(auth, (user) => {
             const isAdmin = user && ADMIN_EMAILS.includes(user.email);
             document.getElementById('loginBtn').classList.toggle('hidden', isAdmin);
             document.getElementById('adminPanel').classList.toggle('hidden', !isAdmin);
-            document.getElementById('addSchoolBtn').classList.toggle('hidden', !isAdmin);
+            document.getElementById('addSchoolBtn').classList.toggle('hidden', !isAdmin); // 新增校系按鈕
             if(isAdmin) document.getElementById('userName').innerText = user.displayName;
-            renderGrid();
+            loadSchools();
         });
 
         loadSchools();
