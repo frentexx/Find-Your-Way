@@ -5,42 +5,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>小清華原民班升學資訊網</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- 引入 marked.js 用於解析 Markdown (讓公告支援表格與排版) -->
+    <!-- 引入 marked.js 用於解析 Markdown -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; color: #1e293b; font-size: 16px; /* 提升全域基礎字體 */ }
         .glass-nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border-bottom: 1px solid #e2e8f0; }
-        .school-card { cursor: pointer; transition: all 0.2s; border: 1px solid #f1f5f9; background: white; border-radius: 1.25rem; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; min-height: 160px; position: relative; }
+        .school-card { cursor: pointer; transition: all 0.2s; border: 1px solid #f1f5f9; background: white; border-radius: 1.25rem; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; min-height: 180px; position: relative; } /* 增加卡片高度以容納大字體 */
         .school-card:hover { transform: translateY(-4px); box-shadow: 0 12px 20px -5px rgba(0,0,0,0.1); border-color: #6366f1; }
-        .recent-tag { background-color: #fef3c7; color: #92400e; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; margin-top: 8px; display: inline-block; }
+        /* 放大 Recent Tag 字體 */
+        .recent-tag { background-color: #fef3c7; color: #92400e; padding: 6px 10px; border-radius: 6px; font-size: 13px; font-weight: bold; margin-top: 10px; display: inline-block; }
         .timeline-item { position: relative; padding-left: 2rem; border-left: 2px solid #e2e8f0; margin-left: 1rem; padding-bottom: 1.5rem; }
         .timeline-item::before { content: ""; position: absolute; left: -7px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: #6366f1; border: 2px solid white; }
-        .action-link-btn { display: inline-flex; align-items: center; background-color: #f1f5f9; color: #475569; padding: 8px 16px; border-radius: 8px; font-size: 0.875rem; font-weight: 700; text-decoration: none; margin-top: 12px; transition: all 0.2s; }
+        .action-link-btn { display: inline-flex; align-items: center; background-color: #f1f5f9; color: #475569; padding: 10px 20px; border-radius: 10px; font-size: 1rem; font-weight: 700; text-decoration: none; margin-top: 12px; transition: all 0.2s; }
         .action-link-btn:hover { background-color: #e0e7ff; color: #4338ca; }
         .pinned-alert { background: linear-gradient(to right, #fff1f2, #fff); border-left: 4px solid #f43f5e; animation: fadeIn 0.5s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- Markdown 公告內容專用樣式 (表格、列表、粗體) --- */
-        .markdown-body h1, .markdown-body h2, .markdown-body h3 { font-weight: bold; margin-top: 1.2em; margin-bottom: 0.5em; color: #1e293b; line-height: 1.3; }
-        .markdown-body h1 { font-size: 1.5em; border-bottom: 2px solid #f1f5f9; padding-bottom: 0.3em; }
-        .markdown-body h2 { font-size: 1.25em; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.3em; }
-        .markdown-body h3 { font-size: 1.1em; }
-        .markdown-body p { margin-bottom: 0.8em; line-height: 1.7; }
+        /* --- Markdown 公告內容專用樣式 (字體加大版) --- */
+        /* 基礎字體設定為 1.05rem (約 17px)，行高 1.8 倍 */
+        .markdown-body { font-size: 1.05rem; line-height: 1.8; color: #334155; }
+        .markdown-body h1, .markdown-body h2, .markdown-body h3 { font-weight: bold; margin-top: 1.5em; margin-bottom: 0.6em; color: #0f172a; line-height: 1.4; }
+        .markdown-body h1 { font-size: 1.75em; border-bottom: 2px solid #f1f5f9; padding-bottom: 0.3em; }
+        .markdown-body h2 { font-size: 1.5em; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.3em; }
+        .markdown-body h3 { font-size: 1.25em; }
+        .markdown-body p { margin-bottom: 1em; }
         .markdown-body ul { list-style-type: disc; padding-left: 1.5em; margin-bottom: 1em; }
         .markdown-body ol { list-style-type: decimal; padding-left: 1.5em; margin-bottom: 1em; }
-        .markdown-body li { margin-bottom: 0.3em; }
+        .markdown-body li { margin-bottom: 0.4em; }
         .markdown-body strong { font-weight: 700; color: #0f172a; background-color: #f1f5f9; padding: 0 4px; rounded: 4px; }
-        .markdown-body blockquote { border-left: 4px solid #6366f1; padding-left: 1em; color: #64748b; font-style: italic; background: #f8fafc; padding-top: 0.5em; padding-bottom: 0.5em; margin-bottom: 1em; border-radius: 0 8px 8px 0; }
-        .markdown-body a { color: #4f46e5; text-decoration: underline; }
+        .markdown-body blockquote { border-left: 5px solid #6366f1; padding-left: 1.2em; color: #64748b; font-style: italic; background: #f8fafc; padding-top: 0.8em; padding-bottom: 0.8em; margin-bottom: 1.2em; border-radius: 0 8px 8px 0; }
+        .markdown-body a { color: #4f46e5; text-decoration: underline; font-weight: 500; }
         
-        /* 表格樣式優化 */
-        .markdown-body table { width: 100%; border-collapse: collapse; margin: 1em 0; font-size: 0.95em; overflow-x: auto; display: block; border-radius: 8px; border: 1px solid #cbd5e1; }
-        .markdown-body th, .markdown-body td { border: 1px solid #cbd5e1; padding: 0.75em 1em; text-align: left; }
-        .markdown-body th { background-color: #f1f5f9; font-weight: bold; color: #334155; white-space: nowrap; }
+        /* 表格樣式優化 (字體加大) */
+        .markdown-body table { width: 100%; border-collapse: collapse; margin: 1.5em 0; font-size: 1rem; overflow-x: auto; display: block; border-radius: 8px; border: 1px solid #cbd5e1; }
+        .markdown-body th, .markdown-body td { border: 1px solid #cbd5e1; padding: 0.8em 1.2em; text-align: left; }
+        .markdown-body th { background-color: #f1f5f9; font-weight: bold; color: #1e293b; white-space: nowrap; font-size: 1.05rem; }
         .markdown-body tr:nth-child(even) { background-color: #f8fafc; }
         .markdown-body tr:hover { background-color: #f1f5f9; }
+
+        /* 閱讀視窗的滾動條美化 */
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body class="pb-24">
@@ -49,61 +58,61 @@
         <div class="max-w-4xl mx-auto px-4 h-16 flex justify-between items-center">
             <div class="flex items-center space-x-2" onclick="location.reload()" style="cursor:pointer">
                 <div class="w-10 h-10 bg-indigo-700 rounded-xl flex items-center justify-center text-white shadow-lg"><i class="fas fa-university"></i></div>
-                <span class="font-bold text-slate-800 text-lg hidden md:block">小清華升學網</span>
+                <span class="font-bold text-slate-800 text-xl hidden md:block">小清華升學網</span> <!-- 字體加大 -->
             </div>
             <div class="flex items-center space-x-2 md:space-x-3">
-                <button onclick="window.showSection('home')" class="text-sm font-bold text-slate-600 px-2 hover:text-indigo-600">行事曆</button>
-                <button onclick="window.showSection('bulletin')" class="text-sm font-bold text-slate-600 px-2 hover:text-indigo-600">公告</button>
+                <button onclick="window.showSection('home')" class="text-base font-bold text-slate-600 px-3 hover:text-indigo-600">行事曆</button> <!-- 字體加大 -->
+                <button onclick="window.showSection('bulletin')" class="text-base font-bold text-slate-600 px-3 hover:text-indigo-600">公告</button> <!-- 字體加大 -->
                 
                 <!-- 篩選策略連結 -->
-                <a href="https://frentexx.github.io/screening-strategy/" target="_blank" class="text-sm font-bold text-slate-600 px-2 hover:text-indigo-600 no-underline"><i class="fas fa-filter mr-1"></i>篩選策略</a>
+                <a href="https://frentexx.github.io/screening-strategy/" target="_blank" class="text-base font-bold text-slate-600 px-3 hover:text-indigo-600 no-underline"><i class="fas fa-filter mr-1"></i>篩選策略</a>
                 
-                <button id="loginBtn" onclick="window.handleAuth()" class="bg-indigo-50 text-indigo-700 px-4 py-1.5 rounded-full text-xs font-bold border border-indigo-100 hover:bg-indigo-100">管理</button>
+                <button id="loginBtn" onclick="window.handleAuth()" class="bg-indigo-50 text-indigo-700 px-4 py-2 rounded-full text-sm font-bold border border-indigo-100 hover:bg-indigo-100">管理</button>
                 <div id="adminPanel" class="hidden flex items-center space-x-2">
-                    <button id="navLinkBtn" class="text-xs bg-slate-100 px-3 py-1.5 rounded-lg font-bold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition"><i class="fas fa-link mr-1"></i>連結</button>
-                    <button onclick="window.handleLogout()" class="text-xs text-red-500 font-bold px-2 hover:text-red-700">登出</button>
+                    <button id="navLinkBtn" class="text-sm bg-slate-100 px-3 py-2 rounded-lg font-bold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition"><i class="fas fa-link mr-1"></i>連結</button>
+                    <button onclick="window.handleLogout()" class="text-sm text-red-500 font-bold px-3 hover:text-red-700">登出</button>
                 </div>
             </div>
         </div>
     </nav>
 
-    <main class="max-w-4xl mx-auto px-4 py-6">
+    <main class="max-w-4xl mx-auto px-4 py-8">
         
         <section id="home-section">
             <div id="pinned-section" class="mb-8 hidden">
-                <h3 class="text-xs font-bold text-red-500 mb-2 flex items-center uppercase tracking-widest"><i class="fas fa-bullhorn mr-2"></i>重要消息</h3>
+                <h3 class="text-sm font-bold text-red-500 mb-2 flex items-center uppercase tracking-widest"><i class="fas fa-bullhorn mr-2"></i>重要消息</h3>
                 <div id="pinned-list" class="space-y-3"></div>
             </div>
 
-            <div class="flex justify-between items-end mb-4">
+            <div class="flex justify-between items-end mb-6">
                 <div>
-                    <h2 class="text-2xl font-bold text-slate-900">升學行事曆</h2>
-                    <p class="text-slate-500 text-sm">智慧顯示：自動標註最近的重要時程</p>
+                    <h2 class="text-3xl font-bold text-slate-900">升學行事曆</h2> <!-- 字體加大 -->
+                    <p class="text-slate-500 text-base mt-1">智慧顯示：自動標註最近的重要時程</p> <!-- 字體加大 -->
                 </div>
-                <button id="addSchoolBtn" class="hidden bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg transform active:scale-95 transition" onclick="window.openSchoolModal(null)">
+                <button id="addSchoolBtn" class="hidden bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-base font-bold shadow-lg transform active:scale-95 transition" onclick="window.openSchoolModal(null)">
                     <i class="fas fa-plus mr-1"></i>新增校系
                 </button>
             </div>
 
-            <div class="flex bg-slate-200/50 p-1 rounded-2xl mb-6 max-w-sm">
-                <button onclick="window.switchTab('sheet1')" id="tab-sheet1" class="flex-1 py-2.5 text-center rounded-xl font-bold transition-all bg-indigo-600 text-white shadow-md">採計學測</button>
-                <button onclick="window.switchTab('sheet2')" id="tab-sheet2" class="flex-1 py-2.5 text-center rounded-xl font-bold transition-all text-slate-500 hover:bg-white/50">獨立招生</button>
+            <div class="flex bg-slate-200/50 p-1.5 rounded-2xl mb-8 max-w-sm">
+                <button onclick="window.switchTab('sheet1')" id="tab-sheet1" class="flex-1 py-3 text-center rounded-xl font-bold text-lg transition-all bg-indigo-600 text-white shadow-md">採計學測</button> <!-- 字體加大 -->
+                <button onclick="window.switchTab('sheet2')" id="tab-sheet2" class="flex-1 py-3 text-center rounded-xl font-bold text-lg transition-all text-slate-500 hover:bg-white/50">獨立招生</button> <!-- 字體加大 -->
             </div>
 
-            <div id="calendar-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
-                <div class="col-span-2 text-center py-10 text-slate-400">正在讀取最新資料...</div>
+            <div id="calendar-grid" class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-12">
+                <div class="col-span-2 text-center py-10 text-slate-400 text-lg">正在讀取最新資料...</div>
             </div>
 
             <div class="border-t border-slate-200 pt-8">
-                <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center"><i class="fas fa-external-link-alt mr-2 text-slate-400"></i>推薦外部資源</h3>
-                <div id="external-links-grid" class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>
+                <h3 class="text-xl font-bold text-slate-800 mb-4 flex items-center"><i class="fas fa-external-link-alt mr-2 text-slate-400"></i>推薦外部資源</h3> <!-- 字體加大 -->
+                <div id="external-links-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
             </div>
         </section>
 
         <section id="bulletin-section" class="hidden">
             <div class="flex justify-between items-center mb-8">
-                <h2 class="text-2xl font-bold text-slate-800">最新公告</h2>
-                <button id="addPostBtn" class="hidden bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg transform active:scale-95 transition">
+                <h2 class="text-3xl font-bold text-slate-800">最新公告</h2> <!-- 字體加大 -->
+                <button id="addPostBtn" class="hidden bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-base font-bold shadow-lg transform active:scale-95 transition">
                     <i class="fas fa-pen mr-2"></i>發布公告
                 </button>
             </div>
@@ -111,6 +120,40 @@
         </section>
     </main>
 
+    <!-- 閱讀公告專用的彈出視窗 -->
+    <div id="readModal" class="fixed inset-0 bg-slate-900/60 hidden z-[120] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-3xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <!-- 視窗標題列 -->
+            <div class="p-6 border-b border-slate-100 flex justify-between items-start bg-slate-50/50">
+                <div class="pr-8">
+                    <div id="readDate" class="text-sm font-bold text-slate-500 mb-2"></div> <!-- 字體加大 -->
+                    <h3 id="readTitle" class="text-3xl font-bold text-slate-900 leading-tight"></h3> <!-- 字體加大 -->
+                </div>
+                <button onclick="document.getElementById('readModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 p-2 shrink-0">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            
+            <!-- 視窗內容區 (支援 Markdown) -->
+            <div class="p-8 overflow-y-auto bg-white custom-scrollbar">
+                <div id="readContent" class="markdown-body"></div>
+                
+                <!-- 連結區塊 -->
+                <div id="readLinkArea" class="mt-8 hidden">
+                    <a id="readLinkBtn" href="#" target="_blank" class="inline-flex items-center justify-center w-full py-4 bg-indigo-50 text-indigo-600 rounded-xl font-bold text-lg border border-indigo-100 hover:bg-indigo-100 transition">
+                        <i class="fas fa-external-link-alt mr-2"></i><span>前往連結</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- 底部關閉按鈕 -->
+            <div class="p-5 border-t border-slate-100 bg-white flex justify-end">
+                <button onclick="document.getElementById('readModal').classList.add('hidden')" class="px-8 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-base hover:bg-slate-200 transition">關閉閱讀</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 詳情 Modal -->
     <div id="detailModal" class="fixed inset-0 bg-slate-900/60 hidden z-[100] flex items-end md:items-center justify-center p-0 md:p-4 backdrop-blur-sm">
         <div class="bg-white w-full max-w-lg rounded-t-3xl md:rounded-3xl p-8 shadow-2xl overflow-y-auto max-h-[85vh]">
             <div class="flex justify-between items-start mb-6">
@@ -126,74 +169,77 @@
         </div>
     </div>
 
+    <!-- 編輯校系 Modal -->
     <div id="schoolModal" class="fixed inset-0 bg-slate-900/60 hidden z-[110] flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl overflow-hidden">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-slate-800" id="schoolModalTitle">編輯行事曆</h3>
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-slate-800" id="schoolModalTitle">編輯行事曆</h3>
                 <button onclick="window.closeSchoolModal()" class="text-slate-400"><i class="fas fa-times"></i></button>
             </div>
-            <div class="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
+            <div class="space-y-5 max-h-[50vh] overflow-y-auto pr-2">
                 <input type="hidden" id="editSchoolId">
                 <input type="hidden" id="editSchoolType">
                 <div>
-                    <label class="text-xs font-bold text-slate-400">校系名稱</label>
-                    <input type="text" id="schoolName" class="w-full px-4 py-2 bg-slate-50 border rounded-xl outline-none font-bold text-slate-700">
+                    <label class="text-sm font-bold text-slate-400 mb-1 block">校系名稱</label>
+                    <input type="text" id="schoolName" class="w-full px-4 py-3 bg-slate-50 border rounded-xl outline-none font-bold text-lg text-slate-700">
                 </div>
-                <div id="eventInputs" class="space-y-2"></div>
-                <button onclick="window.addEventInput()" class="w-full py-2 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 text-xs font-bold hover:bg-slate-50">+ 新增時程</button>
+                <div id="eventInputs" class="space-y-3"></div>
+                <button onclick="window.addEventInput()" class="w-full py-3 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 text-sm font-bold hover:bg-slate-50">+ 新增時程</button>
             </div>
             <div class="flex space-x-3 pt-6 border-t mt-6">
-                <button onclick="window.closeSchoolModal()" class="flex-1 py-3 font-bold text-slate-400">取消</button>
-                <button id="saveSchoolBtn" class="flex-[2] bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700">儲存</button>
+                <button onclick="window.closeSchoolModal()" class="flex-1 py-3 font-bold text-slate-400 text-lg">取消</button>
+                <button id="saveSchoolBtn" class="flex-[2] bg-indigo-600 text-white py-3 rounded-xl font-bold text-lg hover:bg-indigo-700">儲存</button>
                 <button id="deleteSchoolBtn" onclick="window.deleteSchool()" class="hidden px-4 py-3 bg-red-50 text-red-500 rounded-xl font-bold"><i class="fas fa-trash"></i></button>
             </div>
         </div>
     </div>
 
+    <!-- 發布公告 Modal -->
     <div id="postModal" class="fixed inset-0 bg-slate-900/60 hidden z-[110] flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl overflow-y-auto max-h-[90vh]">
-            <h3 class="text-xl font-bold mb-4 text-slate-800" id="postModalTitle">發布公告</h3>
+            <h3 class="text-2xl font-bold mb-6 text-slate-800" id="postModalTitle">發布公告</h3>
             <input type="hidden" id="editPostId">
-            <div class="space-y-4">
+            <div class="space-y-5">
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 mb-1 uppercase">公告標題</label>
-                    <input type="text" id="postTitle" placeholder="請輸入標題" class="w-full px-4 py-3 bg-slate-50 border rounded-xl outline-none font-bold">
+                    <label class="block text-sm font-bold text-slate-400 mb-2 uppercase">公告標題</label>
+                    <input type="text" id="postTitle" placeholder="請輸入標題" class="w-full px-4 py-3 bg-slate-50 border rounded-xl outline-none font-bold text-lg">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 mb-1 uppercase">公告內容 (支援 Gemini 複製貼上 / Markdown)</label>
-                    <textarea id="postContent" rows="8" placeholder="請輸入詳細說明，您可以直接從 Gemini 複製表格或文字貼上於此..." class="w-full px-4 py-3 bg-slate-50 border rounded-xl outline-none font-mono text-sm"></textarea>
+                    <label class="block text-sm font-bold text-slate-400 mb-2 uppercase">公告內容 (支援 Gemini 複製貼上 / Markdown)</label>
+                    <textarea id="postContent" rows="8" placeholder="請輸入詳細說明，您可以直接從 Gemini 複製表格或文字貼上於此..." class="w-full px-4 py-3 bg-slate-50 border rounded-xl outline-none font-mono text-base"></textarea>
                 </div>
-                <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-                    <label class="block text-xs font-bold text-indigo-500 mb-2 uppercase"><i class="fas fa-link mr-1"></i>附加按鈕連結 (選填)</label>
-                    <div class="grid grid-cols-3 gap-2">
+                <div class="bg-indigo-50 p-5 rounded-xl border border-indigo-100">
+                    <label class="block text-sm font-bold text-indigo-500 mb-2 uppercase"><i class="fas fa-link mr-1"></i>附加按鈕連結 (選填)</label>
+                    <div class="grid grid-cols-3 gap-3">
                         <input type="text" id="postLinkName" placeholder="按鈕文字" class="col-span-1 px-3 py-2 bg-white border rounded-lg text-sm">
                         <input type="text" id="postLinkUrl" placeholder="網址 (https://...)" class="col-span-2 px-3 py-2 bg-white border rounded-lg text-sm">
                     </div>
                 </div>
-                <div class="flex items-center space-x-2 bg-red-50 p-3 rounded-xl border border-red-100">
+                <div class="flex items-center space-x-3 bg-red-50 p-4 rounded-xl border border-red-100">
                     <input type="checkbox" id="postPinned" class="w-5 h-5 text-red-600 rounded focus:ring-red-500">
-                    <label for="postPinned" class="text-sm font-bold text-red-700">設為首頁重要置頂</label>
+                    <label for="postPinned" class="text-base font-bold text-red-700">設為首頁重要置頂</label>
                 </div>
-                <div class="flex space-x-3 pt-2">
-                    <button onclick="window.closePostModal()" class="flex-1 py-3 text-slate-400 font-bold">取消</button>
-                    <button id="savePostBtn" class="flex-[2] bg-indigo-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-indigo-700">發布公告</button>
+                <div class="flex space-x-3 pt-4">
+                    <button onclick="window.closePostModal()" class="flex-1 py-3 text-slate-400 font-bold text-lg">取消</button>
+                    <button id="savePostBtn" class="flex-[2] bg-indigo-600 text-white py-3 rounded-xl font-bold text-lg shadow-lg hover:bg-indigo-700">發布公告</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- 連結管理 Modal -->
     <div id="linkModal" class="fixed inset-0 bg-slate-900/60 hidden z-[110] flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold text-slate-800">管理推薦連結</h3>
+                <h3 class="text-2xl font-bold text-slate-800">管理推薦連結</h3>
                 <button onclick="window.closeLinkModal()" class="text-slate-400"><i class="fas fa-times"></i></button>
             </div>
-            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 mb-6">
-                <h4 class="text-xs font-bold text-slate-400 mb-2 uppercase">新增連結</h4>
-                <div class="space-y-2">
-                    <input type="text" id="newLinkName" placeholder="網站名稱 (如：甄選策略)" class="w-full px-3 py-2 border rounded-lg text-sm">
-                    <input type="text" id="newLinkUrl" placeholder="網址 (https://...)" class="w-full px-3 py-2 border rounded-lg text-sm">
-                    <button onclick="window.addLink()" class="w-full py-2 bg-slate-800 text-white rounded-lg text-sm font-bold hover:bg-slate-700 transition">新增至列表</button>
+            <div class="bg-slate-50 p-5 rounded-xl border border-slate-100 mb-6">
+                <h4 class="text-sm font-bold text-slate-400 mb-3 uppercase">新增連結</h4>
+                <div class="space-y-3">
+                    <input type="text" id="newLinkName" placeholder="網站名稱 (如：甄選策略)" class="w-full px-4 py-2 border rounded-lg text-base">
+                    <input type="text" id="newLinkUrl" placeholder="網址 (https://...)" class="w-full px-4 py-2 border rounded-lg text-base">
+                    <button onclick="window.addLink()" class="w-full py-3 bg-slate-800 text-white rounded-lg text-base font-bold hover:bg-slate-700 transition">新增至列表</button>
                 </div>
             </div>
             <div class="max-h-[30vh] overflow-y-auto space-y-2" id="manageLinkList"></div>
@@ -277,45 +323,68 @@
             } catch(e) {}
         }
 
-        // 渲染函數 (已修改支援 Markdown)
+        // 渲染函數：公告列表 (簡潔列表版，點擊後閱讀)
         function renderAnnouncements() {
             const list = document.getElementById('announcement-list');
             const pinnedList = document.getElementById('pinned-list');
             const pinnedSection = document.getElementById('pinned-section');
             const pinned = announcementsCache.filter(p => p.isPinned);
             
+            // 處理置頂公告 (維持原樣，但點擊會開啟閱讀視窗)
             if (pinned.length > 0) {
                 pinnedSection.classList.remove('hidden');
-                pinnedList.innerHTML = pinned.map(p => `<div class="pinned-alert p-4 rounded-xl shadow-sm cursor-pointer mb-2" onclick="window.showSection('bulletin')"><div class="flex items-start justify-between"><div><span class="bg-red-100 text-red-600 text-[10px] px-2 py-1 rounded-full font-bold mb-1 inline-block">重要通知</span><h4 class="font-bold text-slate-800 text-md">${p.title}</h4></div><i class="fas fa-chevron-right text-slate-300 mt-2"></i></div></div>`).join('');
+                pinnedList.innerHTML = pinned.map(p => `
+                    <div class="pinned-alert p-4 rounded-xl shadow-sm cursor-pointer mb-2 hover:shadow-md transition" onclick="window.readPost('${p.id}')">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <span class="bg-red-100 text-red-600 text-[10px] px-2 py-1 rounded-full font-bold mb-1 inline-block">重要通知</span>
+                                <h4 class="font-bold text-slate-800 text-lg">${p.title}</h4>
+                            </div>
+                            <i class="fas fa-book-open text-red-300 mt-2 text-base"></i>
+                        </div>
+                    </div>`).join('');
             } else { pinnedSection.classList.add('hidden'); }
 
+            // 處理一般公告列表 (改為簡潔版，隱藏內文，字體放大)
             list.innerHTML = announcementsCache.map(p => `
-                <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm relative group">
-                    ${p.isPinned ? '<div class="absolute -left-1 top-4 w-1 h-8 bg-red-500 rounded-r-full"></div>' : ''}
-                    <div class="text-[10px] text-slate-400 mb-2 flex items-center">
-                        <span>${p.createdAt ? new Date(p.createdAt.toDate()).toLocaleDateString() : '剛剛'}</span>
-                        ${p.isPinned ? '<span class="ml-2 text-red-500 font-bold"><i class="fas fa-thumbtack mr-1"></i>置頂</span>' : ''}
-                    </div>
-                    <h4 class="font-bold text-xl text-slate-800 mb-4 pb-2 border-b border-slate-100">${p.title}</h4>
+                <div onclick="window.readPost('${p.id}')" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm relative group cursor-pointer hover:border-indigo-300 hover:shadow-md transition-all duration-200">
                     
-                    <!-- 使用 markdown-body 樣式並解析 Markdown 內容 -->
-                    <div class="markdown-body text-slate-600 text-sm">
-                        ${marked.parse(p.content)}
+                    ${p.isPinned ? '<div class="absolute -left-1 top-4 w-1 h-8 bg-red-500 rounded-r-full"></div>' : ''}
+                    
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1 pr-4">
+                            <div class="text-xs text-slate-500 mb-2 flex items-center font-bold">
+                                <span><i class="far fa-calendar-alt mr-1"></i>${p.createdAt ? new Date(p.createdAt.toDate()).toLocaleDateString() : '剛剛'}</span>
+                                ${p.isPinned ? '<span class="ml-2 text-red-500 font-bold">置頂</span>' : ''}
+                            </div>
+                            <h4 class="font-bold text-xl text-slate-800 group-hover:text-indigo-600 transition-colors line-clamp-1 mb-2">${p.title}</h4>
+                            <p class="text-sm text-slate-500 line-clamp-2 leading-relaxed">${p.content.replace(/[#*`]/g, '').substring(0, 60)}...</p>
+                        </div>
+                        <div class="text-slate-300 group-hover:text-indigo-500 pt-2 text-lg">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
                     </div>
 
-                    ${p.linkUrl ? `<div class="mt-4"><a href="${p.linkUrl}" target="_blank" class="action-link-btn"><i class="fas fa-external-link-alt mr-2"></i>${p.linkName || '相關連結'}</a></div>` : ''}
-                    ${auth.currentUser && ADMIN_EMAILS.includes(auth.currentUser.email) ? `<div class="mt-4 pt-3 border-t border-slate-50 flex justify-end space-x-3"><button onclick="window.openPostModal('${p.id}')" class="text-indigo-400 text-xs font-bold">編輯</button><button onclick="window.deletePost('${p.id}')" class="text-slate-400 text-xs font-bold hover:text-red-500">刪除</button></div>` : ''}
+                    <!-- 管理員按鈕 (需防止點擊觸發閱讀視窗) -->
+                    ${auth.currentUser && ADMIN_EMAILS.includes(auth.currentUser.email) ? `
+                        <div class="mt-4 pt-3 border-t border-slate-50 flex justify-end space-x-3" onclick="event.stopPropagation()">
+                            <button onclick="window.openPostModal('${p.id}')" class="text-indigo-500 text-sm font-bold hover:bg-indigo-50 px-3 py-1.5 rounded-lg transition">編輯</button>
+                            <button onclick="window.deletePost('${p.id}')" class="text-slate-400 text-sm font-bold hover:text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg transition">刪除</button>
+                        </div>` : ''}
                 </div>`).join('');
         }
 
         function renderLinks() {
             const grid = document.getElementById('external-links-grid');
             const list = document.getElementById('manageLinkList');
-            grid.innerHTML = externalLinks.map(l => `<a href="${l.url}" target="_blank" class="bg-white border border-slate-200 p-3 rounded-xl flex items-center space-x-2 hover:border-indigo-500 hover:shadow-md transition group"><div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-600"><i class="fas fa-link text-xs"></i></div><span class="text-sm font-bold text-slate-700 group-hover:text-indigo-600 truncate">${l.name}</span></a>`).join('');
-            list.innerHTML = externalLinks.map(l => `<div class="flex justify-between items-center bg-white p-3 rounded-lg border border-slate-100 mb-2"><div class="overflow-hidden"><div class="font-bold text-sm text-slate-800 truncate">${l.name}</div><div class="text-xs text-slate-400 truncate">${l.url}</div></div><button onclick="window.deleteLink('${l.id}')" class="text-red-300 hover:text-red-500 px-2 shrink-0"><i class="fas fa-trash"></i></button></div>`).join('');
+            // 放大連結區塊的字體
+            grid.innerHTML = externalLinks.map(l => `<a href="${l.url}" target="_blank" class="bg-white border border-slate-200 p-4 rounded-xl flex items-center space-x-3 hover:border-indigo-500 hover:shadow-md transition group"><div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-600"><i class="fas fa-link text-sm"></i></div><span class="text-base font-bold text-slate-700 group-hover:text-indigo-600 truncate">${l.name}</span></a>`).join('');
+            list.innerHTML = externalLinks.map(l => `<div class="flex justify-between items-center bg-white p-3 rounded-lg border border-slate-100 mb-2"><div class="overflow-hidden"><div class="font-bold text-base text-slate-800 truncate">${l.name}</div><div class="text-sm text-slate-400 truncate">${l.url}</div></div><button onclick="window.deleteLink('${l.id}')" class="text-red-300 hover:text-red-500 px-2 shrink-0"><i class="fas fa-trash"></i></button></div>`).join('');
         }
 
         function parseMonth(val) { const m = val.toString().match(/\d+/); return m ? parseInt(m[0]) : 99; }
+        
+        // 渲染行事曆 (字體加大)
         function renderGrid() {
             const container = document.getElementById('calendar-grid');
             const filtered = displaySchools.filter(s => s.type === currentTab);
@@ -325,11 +394,50 @@
                 let closest = s.events?.find(ev => { const m = parseMonth(ev.m); return m!==99 && new Date(year, m-1, 28) >= now; });
                 if(closest) recentText = `${closest.m}月 ${closest.e}`;
                 else if(s.events?.length) { const last=s.events[s.events.length-1]; recentText = `${last.m}月 ${last.e} (已過)`; }
-                return `<div class="school-card" onclick="window.openDetail('${s.id}')"><div><h3 class="text-lg font-bold text-slate-800">${s.name}</h3><div class="text-indigo-500 text-[10px] font-bold mt-1 uppercase tracking-widest">${currentTab==='sheet1'?'學測':'獨招'}</div><div class="recent-tag"><i class="far fa-clock mr-1"></i> ${recentText}</div></div><div class="mt-4 flex items-center text-slate-400 text-[10px] font-medium border-t pt-3"><span>查看時程</span><i class="fas fa-arrow-right ml-auto"></i></div></div>`;
+                
+                return `<div class="school-card" onclick="window.openDetail('${s.id}')">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-900">${s.name}</h3>
+                        <div class="text-indigo-500 text-xs font-bold mt-2 uppercase tracking-widest">${currentTab==='sheet1'?'學測':'獨招'}</div>
+                        <div class="recent-tag"><i class="far fa-clock mr-1"></i> ${recentText}</div>
+                    </div>
+                    <div class="mt-4 flex items-center text-slate-400 text-xs font-medium border-t pt-4">
+                        <span>查看詳細時程</span>
+                        <i class="fas fa-arrow-right ml-auto text-sm"></i>
+                    </div>
+                </div>`;
             }).join('');
         }
 
         // --- 全域函數 ---
+        // 新增：閱讀公告的邏輯 (開啟視窗)
+        window.readPost = (id) => {
+            const post = announcementsCache.find(d => d.id === id);
+            if (!post) return;
+
+            // 1. 填入標題與時間
+            document.getElementById('readTitle').innerText = post.title;
+            document.getElementById('readDate').innerText = post.createdAt ? new Date(post.createdAt.toDate()).toLocaleDateString() : '剛剛';
+            
+            // 2. 轉換 Markdown 內文並填入 (包含表格)
+            document.getElementById('readContent').innerHTML = marked.parse(post.content);
+
+            // 3. 處理連結按鈕
+            const linkArea = document.getElementById('readLinkArea');
+            const linkBtn = document.getElementById('readLinkBtn');
+            
+            if (post.linkUrl) {
+                linkArea.classList.remove('hidden');
+                linkBtn.href = post.linkUrl;
+                linkBtn.querySelector('span').innerText = post.linkName || '前往連結';
+            } else {
+                linkArea.classList.add('hidden');
+            }
+
+            // 4. 顯示視窗
+            document.getElementById('readModal').classList.remove('hidden');
+        };
+
         window.openPostModal = (id) => {
             if(id) {
                 const post = announcementsCache.find(d => d.id === id);
@@ -396,8 +504,8 @@
         window.openDetail = (id) => {
             const s = displaySchools.find(item => item.id === id);
             const isAdmin = auth.currentUser && ADMIN_EMAILS.includes(auth.currentUser.email);
-            document.getElementById('detailHeader').innerHTML = `<h3 class="text-2xl font-bold text-slate-800">${s.name}</h3>`;
-            document.getElementById('detailTimeline').innerHTML = (s.events||[]).map(e => `<div class="timeline-item"><div class="text-[10px] font-bold text-indigo-500">${e.m}月 / ${e.d}</div><div class="text-slate-800 font-bold">${e.e}</div></div>`).join('');
+            document.getElementById('detailHeader').innerHTML = `<h3 class="text-3xl font-bold text-slate-800">${s.name}</h3>`; // 字體加大
+            document.getElementById('detailTimeline').innerHTML = (s.events||[]).map(e => `<div class="timeline-item"><div class="text-xs font-bold text-indigo-500 mb-1">${e.m}月 / ${e.d}</div><div class="text-slate-800 font-bold text-lg">${e.e}</div></div>`).join('');
             const box = document.getElementById('adminEditPlaceholder');
             if(isAdmin) { box.classList.remove('hidden'); document.getElementById('quickEditBtn').onclick = () => { window.closeDetail(); window.openSchoolModal(id); }; } else { box.classList.add('hidden'); }
             document.getElementById('detailModal').classList.remove('hidden');
@@ -424,7 +532,7 @@
 
         window.addEventInput = (m='', d='', e='') => {
             const div = document.createElement('div'); div.className = "flex space-x-2 bg-slate-50 p-2 rounded-xl mb-2";
-            div.innerHTML = `<input type="text" placeholder="月" value="${m}" class="w-12 p-2 border rounded-lg text-xs"><input type="text" placeholder="日" value="${d}" class="w-16 p-2 border rounded-lg text-xs"><input type="text" placeholder="事項" value="${e}" class="flex-1 p-2 border rounded-lg text-xs"><button onclick="this.parentElement.remove()" class="text-red-300"><i class="fas fa-trash"></i></button>`;
+            div.innerHTML = `<input type="text" placeholder="月" value="${m}" class="w-16 p-3 border rounded-lg text-base"><input type="text" placeholder="日" value="${d}" class="w-20 p-3 border rounded-lg text-base"><input type="text" placeholder="事項" value="${e}" class="flex-1 p-3 border rounded-lg text-base"><button onclick="this.parentElement.remove()" class="text-red-300 p-2"><i class="fas fa-trash text-lg"></i></button>`;
             document.getElementById('eventInputs').appendChild(div);
         };
 
@@ -453,11 +561,11 @@
             const t2 = document.getElementById('tab-sheet2');
             
             if(t === 'sheet1') {
-                t1.className = "flex-1 py-2.5 text-center rounded-xl font-bold transition-all bg-indigo-600 text-white shadow-md";
-                t2.className = "flex-1 py-2.5 text-center rounded-xl font-bold transition-all text-slate-500 hover:bg-white/50";
+                t1.className = "flex-1 py-3 text-center rounded-xl font-bold text-lg transition-all bg-indigo-600 text-white shadow-md";
+                t2.className = "flex-1 py-3 text-center rounded-xl font-bold text-lg transition-all text-slate-500 hover:bg-white/50";
             } else {
-                t1.className = "flex-1 py-2.5 text-center rounded-xl font-bold transition-all text-slate-500 hover:bg-white/50";
-                t2.className = "flex-1 py-2.5 text-center rounded-xl font-bold transition-all bg-indigo-600 text-white shadow-md";
+                t1.className = "flex-1 py-3 text-center rounded-xl font-bold text-lg transition-all text-slate-500 hover:bg-white/50";
+                t2.className = "flex-1 py-3 text-center rounded-xl font-bold text-lg transition-all bg-indigo-600 text-white shadow-md";
             }
             loadSchools(); 
         };
