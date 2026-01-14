@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>小清華原民班升學資訊網</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 marked.js 用於解析 Markdown (讓公告支援表格與排版) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -19,6 +21,26 @@
         .action-link-btn:hover { background-color: #e0e7ff; color: #4338ca; }
         .pinned-alert { background: linear-gradient(to right, #fff1f2, #fff); border-left: 4px solid #f43f5e; animation: fadeIn 0.5s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- Markdown 公告內容專用樣式 (表格、列表、粗體) --- */
+        .markdown-body h1, .markdown-body h2, .markdown-body h3 { font-weight: bold; margin-top: 1.2em; margin-bottom: 0.5em; color: #1e293b; line-height: 1.3; }
+        .markdown-body h1 { font-size: 1.5em; border-bottom: 2px solid #f1f5f9; padding-bottom: 0.3em; }
+        .markdown-body h2 { font-size: 1.25em; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.3em; }
+        .markdown-body h3 { font-size: 1.1em; }
+        .markdown-body p { margin-bottom: 0.8em; line-height: 1.7; }
+        .markdown-body ul { list-style-type: disc; padding-left: 1.5em; margin-bottom: 1em; }
+        .markdown-body ol { list-style-type: decimal; padding-left: 1.5em; margin-bottom: 1em; }
+        .markdown-body li { margin-bottom: 0.3em; }
+        .markdown-body strong { font-weight: 700; color: #0f172a; background-color: #f1f5f9; padding: 0 4px; rounded: 4px; }
+        .markdown-body blockquote { border-left: 4px solid #6366f1; padding-left: 1em; color: #64748b; font-style: italic; background: #f8fafc; padding-top: 0.5em; padding-bottom: 0.5em; margin-bottom: 1em; border-radius: 0 8px 8px 0; }
+        .markdown-body a { color: #4f46e5; text-decoration: underline; }
+        
+        /* 表格樣式優化 */
+        .markdown-body table { width: 100%; border-collapse: collapse; margin: 1em 0; font-size: 0.95em; overflow-x: auto; display: block; border-radius: 8px; border: 1px solid #cbd5e1; }
+        .markdown-body th, .markdown-body td { border: 1px solid #cbd5e1; padding: 0.75em 1em; text-align: left; }
+        .markdown-body th { background-color: #f1f5f9; font-weight: bold; color: #334155; white-space: nowrap; }
+        .markdown-body tr:nth-child(even) { background-color: #f8fafc; }
+        .markdown-body tr:hover { background-color: #f1f5f9; }
     </style>
 </head>
 <body class="pb-24">
@@ -33,7 +55,7 @@
                 <button onclick="window.showSection('home')" class="text-sm font-bold text-slate-600 px-2 hover:text-indigo-600">行事曆</button>
                 <button onclick="window.showSection('bulletin')" class="text-sm font-bold text-slate-600 px-2 hover:text-indigo-600">公告</button>
                 
-                <!-- 新增篩選策略連結 -->
+                <!-- 篩選策略連結 -->
                 <a href="https://frentexx.github.io/screening-strategy/" target="_blank" class="text-sm font-bold text-slate-600 px-2 hover:text-indigo-600 no-underline"><i class="fas fa-filter mr-1"></i>篩選策略</a>
                 
                 <button id="loginBtn" onclick="window.handleAuth()" class="bg-indigo-50 text-indigo-700 px-4 py-1.5 rounded-full text-xs font-bold border border-indigo-100 hover:bg-indigo-100">管理</button>
@@ -138,8 +160,8 @@
                     <input type="text" id="postTitle" placeholder="請輸入標題" class="w-full px-4 py-3 bg-slate-50 border rounded-xl outline-none font-bold">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 mb-1 uppercase">公告內容</label>
-                    <textarea id="postContent" rows="6" placeholder="請輸入詳細說明..." class="w-full px-4 py-3 bg-slate-50 border rounded-xl outline-none"></textarea>
+                    <label class="block text-xs font-bold text-slate-400 mb-1 uppercase">公告內容 (支援 Gemini 複製貼上 / Markdown)</label>
+                    <textarea id="postContent" rows="8" placeholder="請輸入詳細說明，您可以直接從 Gemini 複製表格或文字貼上於此..." class="w-full px-4 py-3 bg-slate-50 border rounded-xl outline-none font-mono text-sm"></textarea>
                 </div>
                 <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
                     <label class="block text-xs font-bold text-indigo-500 mb-2 uppercase"><i class="fas fa-link mr-1"></i>附加按鈕連結 (選填)</label>
@@ -255,7 +277,7 @@
             } catch(e) {}
         }
 
-        // 渲染函數
+        // 渲染函數 (已修改支援 Markdown)
         function renderAnnouncements() {
             const list = document.getElementById('announcement-list');
             const pinnedList = document.getElementById('pinned-list');
@@ -268,12 +290,20 @@
             } else { pinnedSection.classList.add('hidden'); }
 
             list.innerHTML = announcementsCache.map(p => `
-                <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm relative group">
+                <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm relative group">
                     ${p.isPinned ? '<div class="absolute -left-1 top-4 w-1 h-8 bg-red-500 rounded-r-full"></div>' : ''}
-                    <div class="text-[10px] text-slate-400 mb-1 flex items-center"><span>${p.createdAt ? new Date(p.createdAt.toDate()).toLocaleDateString() : '剛剛'}</span>${p.isPinned ? '<span class="ml-2 text-red-500 font-bold"><i class="fas fa-thumbtack mr-1"></i>置頂</span>' : ''}</div>
-                    <h4 class="font-bold text-lg text-slate-800 mb-2">${p.title}</h4>
-                    <p class="text-slate-600 text-sm whitespace-pre-wrap leading-relaxed">${p.content}</p>
-                    ${p.linkUrl ? `<a href="${p.linkUrl}" target="_blank" class="action-link-btn"><i class="fas fa-external-link-alt mr-2"></i>${p.linkName || '連結'}</a>` : ''}
+                    <div class="text-[10px] text-slate-400 mb-2 flex items-center">
+                        <span>${p.createdAt ? new Date(p.createdAt.toDate()).toLocaleDateString() : '剛剛'}</span>
+                        ${p.isPinned ? '<span class="ml-2 text-red-500 font-bold"><i class="fas fa-thumbtack mr-1"></i>置頂</span>' : ''}
+                    </div>
+                    <h4 class="font-bold text-xl text-slate-800 mb-4 pb-2 border-b border-slate-100">${p.title}</h4>
+                    
+                    <!-- 使用 markdown-body 樣式並解析 Markdown 內容 -->
+                    <div class="markdown-body text-slate-600 text-sm">
+                        ${marked.parse(p.content)}
+                    </div>
+
+                    ${p.linkUrl ? `<div class="mt-4"><a href="${p.linkUrl}" target="_blank" class="action-link-btn"><i class="fas fa-external-link-alt mr-2"></i>${p.linkName || '相關連結'}</a></div>` : ''}
                     ${auth.currentUser && ADMIN_EMAILS.includes(auth.currentUser.email) ? `<div class="mt-4 pt-3 border-t border-slate-50 flex justify-end space-x-3"><button onclick="window.openPostModal('${p.id}')" class="text-indigo-400 text-xs font-bold">編輯</button><button onclick="window.deletePost('${p.id}')" class="text-slate-400 text-xs font-bold hover:text-red-500">刪除</button></div>` : ''}
                 </div>`).join('');
         }
@@ -299,7 +329,7 @@
             }).join('');
         }
 
-        // --- 全域函數 (修正綁定) ---
+        // --- 全域函數 ---
         window.openPostModal = (id) => {
             if(id) {
                 const post = announcementsCache.find(d => d.id === id);
@@ -344,9 +374,8 @@
             } catch(e) { alert("錯誤: " + e.message); }
         };
         
-        // ** 重要：事件監聽綁定 (解決按鈕失效問題) **
+        // 事件監聽綁定
         document.getElementById('addPostBtn').addEventListener('click', () => window.openPostModal(null));
-        // 修正：補上發布公告按鈕的監聽
         document.getElementById('savePostBtn').addEventListener('click', window.savePost);
         document.getElementById('navLinkBtn').addEventListener('click', () => { document.getElementById('linkModal').classList.remove('hidden'); loadLinks(); });
 
@@ -417,7 +446,7 @@
         window.closeDetail = () => document.getElementById('detailModal').classList.add('hidden');
         window.closeSchoolModal = () => document.getElementById('schoolModal').classList.add('hidden');
         
-        // 修正：標籤切換樣式邏輯
+        // 標籤切換樣式邏輯
         window.switchTab = (t) => { 
             currentTab = t; 
             const t1 = document.getElementById('tab-sheet1');
