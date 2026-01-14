@@ -33,6 +33,9 @@
                 <button onclick="window.showSection('home')" class="text-sm font-bold text-slate-600 px-2 hover:text-indigo-600">行事曆</button>
                 <button onclick="window.showSection('bulletin')" class="text-sm font-bold text-slate-600 px-2 hover:text-indigo-600">公告</button>
                 
+                <!-- 新增篩選策略連結 -->
+                <a href="https://frentexx.github.io/screening-strategy/" target="_blank" class="text-sm font-bold text-slate-600 px-2 hover:text-indigo-600 no-underline"><i class="fas fa-filter mr-1"></i>篩選策略</a>
+                
                 <button id="loginBtn" onclick="window.handleAuth()" class="bg-indigo-50 text-indigo-700 px-4 py-1.5 rounded-full text-xs font-bold border border-indigo-100 hover:bg-indigo-100">管理</button>
                 <div id="adminPanel" class="hidden flex items-center space-x-2">
                     <button id="navLinkBtn" class="text-xs bg-slate-100 px-3 py-1.5 rounded-lg font-bold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition"><i class="fas fa-link mr-1"></i>連結</button>
@@ -61,8 +64,8 @@
             </div>
 
             <div class="flex bg-slate-200/50 p-1 rounded-2xl mb-6 max-w-sm">
-                <button onclick="window.switchTab('sheet1')" id="tab-sheet1" class="flex-1 py-2.5 text-center rounded-xl font-bold transition-all bg-indigo-600 text-white">採計學測</button>
-                <button onclick="window.switchTab('sheet2')" id="tab-sheet2" class="flex-1 py-2.5 text-center rounded-xl font-bold transition-all text-slate-500">獨立招生</button>
+                <button onclick="window.switchTab('sheet1')" id="tab-sheet1" class="flex-1 py-2.5 text-center rounded-xl font-bold transition-all bg-indigo-600 text-white shadow-md">採計學測</button>
+                <button onclick="window.switchTab('sheet2')" id="tab-sheet2" class="flex-1 py-2.5 text-center rounded-xl font-bold transition-all text-slate-500 hover:bg-white/50">獨立招生</button>
             </div>
 
             <div id="calendar-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
@@ -343,6 +346,8 @@
         
         // ** 重要：事件監聽綁定 (解決按鈕失效問題) **
         document.getElementById('addPostBtn').addEventListener('click', () => window.openPostModal(null));
+        // 修正：補上發布公告按鈕的監聽
+        document.getElementById('savePostBtn').addEventListener('click', window.savePost);
         document.getElementById('navLinkBtn').addEventListener('click', () => { document.getElementById('linkModal').classList.remove('hidden'); loadLinks(); });
 
         window.deletePost = async (id) => { if(confirm("刪除？")) { await deleteDoc(doc(db, "announcements", id)); loadAnnouncements(); }};
@@ -411,7 +416,23 @@
         window.closeLinkModal = () => document.getElementById('linkModal').classList.add('hidden');
         window.closeDetail = () => document.getElementById('detailModal').classList.add('hidden');
         window.closeSchoolModal = () => document.getElementById('schoolModal').classList.add('hidden');
-        window.switchTab = (t) => { currentTab = t; loadSchools(); };
+        
+        // 修正：標籤切換樣式邏輯
+        window.switchTab = (t) => { 
+            currentTab = t; 
+            const t1 = document.getElementById('tab-sheet1');
+            const t2 = document.getElementById('tab-sheet2');
+            
+            if(t === 'sheet1') {
+                t1.className = "flex-1 py-2.5 text-center rounded-xl font-bold transition-all bg-indigo-600 text-white shadow-md";
+                t2.className = "flex-1 py-2.5 text-center rounded-xl font-bold transition-all text-slate-500 hover:bg-white/50";
+            } else {
+                t1.className = "flex-1 py-2.5 text-center rounded-xl font-bold transition-all text-slate-500 hover:bg-white/50";
+                t2.className = "flex-1 py-2.5 text-center rounded-xl font-bold transition-all bg-indigo-600 text-white shadow-md";
+            }
+            loadSchools(); 
+        };
+
         window.showSection = (s) => { document.getElementById('home-section').classList.toggle('hidden', s!=='home'); document.getElementById('bulletin-section').classList.toggle('hidden', s!=='bulletin'); };
         window.handleAuth = () => signInWithPopup(auth, provider);
         window.handleLogout = () => signOut(auth);
