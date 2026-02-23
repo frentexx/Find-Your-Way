@@ -48,12 +48,13 @@
     <main class="max-w-4xl mx-auto px-4 py-8">
         <section id="home-section">
             <div id="pinned-section" class="mb-8 hidden">
-                <h3 class="text-sm font-bold text-red-500 mb-3 flex items-center tracking-widest"><i class="fas fa-bullhorn mr-2"></i>重要消息</h3>
+                <h3 class="text-sm font-bold text-red-500 mb-3 flex items-center tracking-widest uppercase"><i class="fas fa-bullhorn mr-2"></i>重要消息</h3>
                 <div id="pinned-list" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
             </div>
 
+            <!-- 近期提醒區塊 -->
             <div id="upcoming-section" class="mb-10 hidden">
-                <h3 class="text-sm font-bold text-amber-600 mb-3 flex items-center tracking-widest"><i class="fas fa-hourglass-half mr-2"></i>近期提醒</h3>
+                <h3 class="text-sm font-bold text-amber-600 mb-3 flex items-center tracking-widest uppercase"><i class="fas fa-hourglass-half mr-2"></i>近期提醒 (未來 14 天)</h3>
                 <div id="upcoming-list" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
             </div>
 
@@ -102,8 +103,26 @@
             <div class="flex space-x-3 pt-6 border-t mt-6">
                 <button onclick="window.closeSchoolModal()" class="flex-1 py-3 font-bold text-slate-400">取消</button>
                 <button id="saveSchoolBtn" class="flex-[2] bg-indigo-600 text-white py-3 rounded-xl font-bold">儲存</button>
-                <button id="deleteSchoolBtn" onclick="window.deleteSchool()" class="hidden px-4 py-3 bg-red-50 text-red-500 rounded-xl"><i class="fas fa-trash"></i></button>
+                <button id="deleteSchoolBtn" onclick="window.deleteSchool()" class="hidden px-4 py-3 bg-red-50 text-red-500 rounded-xl font-bold"><i class="fas fa-trash"></i></button>
             </div>
+        </div>
+    </div>
+
+    <div id="detailModal" class="fixed inset-0 bg-slate-900/60 hidden z-[100] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl overflow-hidden">
+            <div class="flex justify-between items-start mb-6"><div id="detailHeader"></div><button onclick="window.closeDetail()" class="text-slate-400"><i class="fas fa-times"></i></button></div>
+            <div id="detailTimeline" class="max-h-[50vh] overflow-y-auto pr-2"></div>
+            <button id="quickEditBtn" class="w-full mt-6 py-3 bg-indigo-50 text-indigo-600 rounded-xl font-bold hidden">編輯卡片內容</button>
+        </div>
+    </div>
+
+    <div id="readModal" class="fixed inset-0 bg-slate-900/60 hidden z-[120] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-6 border-b flex justify-between bg-slate-50">
+                <h3 id="readTitle" class="text-2xl font-bold"></h3>
+                <button onclick="document.getElementById('readModal').classList.add('hidden')"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="p-8 overflow-y-auto"><div id="readContent" class="markdown-body"></div></div>
         </div>
     </div>
 
@@ -111,29 +130,10 @@
         <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl">
             <div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold">管理外部連結</h3><button onclick="document.getElementById('linkModal').classList.add('hidden')" class="text-slate-400"><i class="fas fa-times"></i></button></div>
             <div class="space-y-3 mb-6 bg-slate-50 p-4 rounded-xl">
-                <input type="text" id="newLinkName" placeholder="網站名稱" class="w-full px-4 py-2 border rounded-lg">
-                <input type="text" id="newLinkUrl" placeholder="網址 (https://...)" class="w-full px-4 py-2 border rounded-lg">
-                <button onclick="window.addLink()" class="w-full py-2 bg-indigo-600 text-white rounded-lg font-bold">新增</button>
+                <input type="text" id="newLinkName" placeholder="網站名稱" class="w-full px-4 py-2 border rounded-lg"><input type="text" id="newLinkUrl" placeholder="網址 (https://...)" class="w-full px-4 py-2 border rounded-lg">
+                <button onclick="window.addLink()" class="w-full py-2 bg-indigo-600 text-white rounded-lg font-bold">新增連結</button>
             </div>
             <div class="max-h-[30vh] overflow-y-auto space-y-2" id="manageLinkList"></div>
-        </div>
-    </div>
-
-    <div id="detailModal" class="fixed inset-0 bg-slate-900/60 hidden z-[100] flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl">
-            <div class="flex justify-between items-start mb-6"><div id="detailHeader"></div><button onclick="window.closeDetail()" class="text-slate-400"><i class="fas fa-times"></i></button></div>
-            <div id="detailTimeline"></div>
-            <button id="quickEditBtn" class="w-full mt-6 py-3 bg-indigo-50 text-indigo-600 rounded-xl font-bold hidden">編輯卡片</button>
-        </div>
-    </div>
-
-    <div id="readModal" class="fixed inset-0 bg-slate-900/60 hidden z-[120] flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="p-6 border-b flex justify-between">
-                <h3 id="readTitle" class="text-2xl font-bold"></h3>
-                <button onclick="document.getElementById('readModal').classList.add('hidden')"><i class="fas fa-times text-xl"></i></button>
-            </div>
-            <div class="p-8 overflow-y-auto"><div id="readContent" class="markdown-body"></div></div>
         </div>
     </div>
 
@@ -168,7 +168,7 @@
                 const snap = await getDocs(q);
                 displaySchools = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 renderGrid();
-                renderUpcomingEvents();
+                renderUpcomingEvents(); // 核心：渲染近期提醒
             } catch(e) { console.error(e); }
         }
 
@@ -178,7 +178,7 @@
             const isAdmin = auth.currentUser && ADMIN_EMAILS.includes(auth.currentUser.email);
 
             if(filtered.length === 0) {
-                grid.innerHTML = `<div class="col-span-2 text-center py-12 text-slate-400">尚無資料</div>`;
+                grid.innerHTML = `<div class="col-span-2 text-center py-12 text-slate-400">目前此分類尚無資料</div>`;
                 return;
             }
 
@@ -187,7 +187,7 @@
                     <div class="card-drag-handle" style="${isAdmin?'display:block':''}"><i class="fas fa-bars"></i></div>
                     <div>
                         <h3 class="text-xl font-bold text-slate-900">${s.name}</h3>
-                        <div class="recent-tag">${s.events?.[0]?.m || '--'}月 ${s.events?.[0]?.e || '點擊查看'}</div>
+                        <div class="recent-tag">${s.events?.[0]?.m || '--'}月 ${s.events?.[0]?.e || '點擊查看詳情'}</div>
                     </div>
                     <div class="text-xs text-slate-400 mt-4 pt-4 border-t flex justify-between items-center">
                         <span>查看詳細時程</span><i class="fas fa-chevron-right"></i>
@@ -195,7 +195,6 @@
                 </div>
             `).join('');
 
-            // 初始化或更新拖曳功能
             if (isAdmin) initSortable();
         }
 
@@ -212,63 +211,87 @@
                         const id = cards[i].getAttribute('data-id');
                         if(id) await updateDoc(doc(db, "calendar_db", id), { order: i });
                     }
-                    // 為了保持資料庫同步，拖曳後重新整理本地數組排序（不重新渲染以免閃爍）
-                    displaySchools.sort((a,b) => {
-                        const idxA = cards.findIndex(c => c.getAttribute('data-id') === a.id);
-                        const idxB = cards.findIndex(c => c.getAttribute('data-id') === b.id);
-                        return idxA - idxB;
-                    });
                 }
             });
         }
 
-        // 外部連結功能
+        // 修正後的近期提醒功能
+        function renderUpcomingEvents() {
+            const section = document.getElementById('upcoming-section');
+            const list = document.getElementById('upcoming-list');
+            
+            // 取得「今天」的午夜時間，確保能包含今天發生的事
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // 取得「14天後」的結束時間
+            const limit = new Date(today);
+            limit.setDate(today.getDate() + 14);
+            limit.setHours(23, 59, 59, 999);
+
+            let events = [];
+            displaySchools.forEach(s => {
+                s.events?.forEach(e => {
+                    const m = parseInt(e.m);
+                    const d = parseInt(e.d) || 1; // 如果日期是"中旬"等文字，預設為1日
+                    if(!m) return;
+
+                    // 自動判斷年份：如果月份比現在小，視為明年
+                    let year = today.getFullYear();
+                    if (m < today.getMonth() + 1 && today.getMonth() > 8) year++;
+                    
+                    const eventDate = new Date(year, m - 1, d);
+                    
+                    // 判斷是否在 14 天內
+                    if (eventDate >= today && eventDate <= limit) {
+                        events.push({ date: eventDate, name: s.name, e: e.e, id: s.id });
+                    }
+                });
+            });
+
+            if (events.length === 0) {
+                section.classList.add('hidden');
+            } else {
+                section.classList.remove('hidden');
+                events.sort((a,b) => a.date - b.date);
+                list.innerHTML = events.map(ev => `
+                    <div class="bg-amber-50 p-3 rounded-xl border border-amber-100 cursor-pointer hover:bg-amber-100 transition" onclick="window.openDetail('${ev.id}')">
+                        <div class="text-amber-600 font-bold text-sm">${ev.date.getMonth()+1}/${ev.date.getDate()}</div>
+                        <div class="font-bold text-slate-800 text-sm truncate">${ev.name}</div>
+                        <div class="text-[10px] text-slate-500 truncate">${ev.e}</div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // 外部連結渲染
         async function loadLinks() {
             const snap = await getDocs(collection(db, "external_links"));
             const links = snap.docs.map(d => ({id: d.id, ...d.data()}));
-            
-            // 渲染首頁列表
             document.getElementById('external-links-grid').innerHTML = links.map(l => `
                 <a href="${l.url}" target="_blank" class="bg-white p-4 rounded-xl border flex items-center space-x-3 hover:shadow-md transition">
                     <i class="fas fa-link text-indigo-500"></i>
                     <span class="font-bold text-slate-700 truncate">${l.name}</span>
-                </a>
-            `).join('');
+                </a>`).join('');
 
-            // 渲染後台管理列表
             document.getElementById('manageLinkList').innerHTML = links.map(l => `
                 <div class="flex justify-between items-center bg-white p-3 rounded-lg border">
                     <span class="font-bold truncate mr-2">${l.name}</span>
                     <button onclick="window.deleteLink('${l.id}')" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button>
-                </div>
-            `).join('');
+                </div>`).join('');
         }
 
         window.addLink = async () => {
             const name = document.getElementById('newLinkName').value;
             const url = document.getElementById('newLinkUrl').value;
-            if(!name || !url) return alert("請填寫完整");
+            if(!name || !url) return alert("請填寫完整內容");
             await addDoc(collection(db, "external_links"), { name, url, createdAt: serverTimestamp() });
-            document.getElementById('newLinkName').value = '';
-            document.getElementById('newLinkUrl').value = '';
+            document.getElementById('newLinkName').value = ''; document.getElementById('newLinkUrl').value = '';
             loadLinks();
         };
 
         window.deleteLink = async (id) => {
-            if(confirm("確定刪除連結？")) {
-                await deleteDoc(doc(db, "external_links", id));
-                loadLinks();
-            }
-        };
-
-        // 校系編輯與刪除
-        window.deleteSchool = async () => {
-            const id = document.getElementById('editSchoolId').value;
-            if(confirm("確定要永久刪除此校系嗎？")) {
-                await deleteDoc(doc(db, "calendar_db", id));
-                window.closeSchoolModal();
-                loadSchools();
-            }
+            if(confirm("確定刪除此推薦連結？")) { await deleteDoc(doc(db, "external_links", id)); loadLinks(); }
         };
 
         window.switchTab = (t) => {
@@ -276,24 +299,22 @@
             const btns = ['tab-sheet1', 'tab-sheet2', 'tab-sheet3'];
             btns.forEach(id => {
                 const b = document.getElementById(id);
-                if(id === 'tab-'+t) {
-                    b.className = "flex-1 py-3 text-center rounded-xl font-bold text-lg transition-all bg-indigo-600 text-white shadow-md";
-                } else {
-                    b.className = "flex-1 py-3 text-center rounded-xl font-bold text-lg transition-all text-slate-500 hover:bg-white/50";
-                }
+                const isActive = (id === 'tab-'+t);
+                b.className = isActive ? "flex-1 py-3 text-center rounded-xl font-bold text-lg transition-all bg-indigo-600 text-white shadow-md" 
+                                       : "flex-1 py-3 text-center rounded-xl font-bold text-lg transition-all text-slate-500 hover:bg-white/50";
             });
             renderGrid();
         };
 
         window.openDetail = (id) => {
             const s = displaySchools.find(i => i.id === id);
+            if(!s) return;
             document.getElementById('detailHeader').innerHTML = `<h3 class="text-2xl font-bold">${s.name}</h3>`;
             document.getElementById('detailTimeline').innerHTML = (s.events||[]).map(e => `
                 <div class="timeline-item">
-                    <div class="text-xs font-bold text-indigo-500">${e.m}/${e.d}</div>
+                    <div class="text-xs font-bold text-indigo-500">${e.m}月 ${e.d}日</div>
                     <div class="font-bold text-slate-800">${e.e}</div>
-                </div>
-            `).join('');
+                </div>`).join('');
             const isAdmin = auth.currentUser && ADMIN_EMAILS.includes(auth.currentUser.email);
             const editBtn = document.getElementById('quickEditBtn');
             editBtn.classList.toggle('hidden', !isAdmin);
@@ -303,12 +324,12 @@
 
         window.addEventInput = (m='', d='', e='') => {
             const div = document.createElement('div');
-            div.className = "flex space-x-2 items-center";
+            div.className = "flex space-x-2 items-center bg-slate-50 p-2 rounded-lg";
             div.innerHTML = `
                 <input type="text" placeholder="月" value="${m}" class="w-12 p-2 border rounded-lg">
                 <input type="text" placeholder="日" value="${d}" class="w-16 p-2 border rounded-lg">
                 <input type="text" placeholder="事項" value="${e}" class="flex-1 p-2 border rounded-lg">
-                <button onclick="this.parentElement.remove()" class="text-red-300"><i class="fas fa-times"></i></button>`;
+                <button onclick="this.parentElement.remove()" class="text-red-300 px-2"><i class="fas fa-times"></i></button>`;
             document.getElementById('eventInputs').appendChild(div);
         };
 
@@ -319,7 +340,7 @@
             const events = Array.from(document.getElementById('eventInputs').children).map(r => ({
                 m: r.children[0].value, d: r.children[1].value, e: r.children[2].value
             }));
-            if(!name) return alert("名稱必填");
+            if(!name) return alert("校系名稱不能為空");
             const data = { name, type, events, updatedAt: serverTimestamp() };
             if(id) await updateDoc(doc(db, "calendar_db", id), data);
             else { data.order = displaySchools.length; await addDoc(collection(db, "calendar_db"), data); }
@@ -345,13 +366,19 @@
             document.getElementById('schoolModal').classList.remove('hidden');
         };
 
-        // 其他基礎邏輯
+        window.deleteSchool = async () => {
+            if(confirm("確定要刪除這個校系卡片嗎？此操作不可恢復。")) {
+                await deleteDoc(doc(db, "calendar_db", document.getElementById('editSchoolId').value));
+                window.closeSchoolModal(); loadSchools();
+            }
+        };
+
         async function loadAnnouncements() {
             const q = query(collection(db, "announcements"), orderBy("createdAt", "desc"));
             const snap = await getDocs(q);
             const list = snap.docs.map(d => ({id: d.id, ...d.data()}));
             document.getElementById('announcement-list').innerHTML = list.map(p => `
-                <div class="bg-white p-5 rounded-2xl border cursor-pointer" onclick="window.readPost('${p.id}')">
+                <div class="bg-white p-5 rounded-2xl border cursor-pointer hover:border-indigo-300" onclick="window.readPost('${p.id}')">
                     <h4 class="font-bold text-lg">${p.title}</h4>
                     <div class="text-xs text-slate-400 mt-1">${p.createdAt?.toDate().toLocaleDateString() || '剛剛'}</div>
                 </div>`).join('');
@@ -370,26 +397,7 @@
             document.getElementById('readTitle').innerText = p.title;
             document.getElementById('readContent').innerHTML = marked.parse(p.content);
             document.getElementById('readModal').classList.remove('hidden');
-        }
-
-        function renderUpcomingEvents() {
-            const section = document.getElementById('upcoming-section');
-            const list = document.getElementById('upcoming-list');
-            const now = new Date(); const limit = new Date(); limit.setDate(now.getDate() + 14);
-            let events = [];
-            displaySchools.forEach(s => s.events?.forEach(e => {
-                const m = parseInt(e.m); if(!m) return;
-                const date = new Date(2025, m-1, parseInt(e.d) || 1);
-                if(date >= now && date <= limit) events.push({ date, name: s.name, e: e.e, id: s.id });
-            }));
-            section.classList.toggle('hidden', events.length === 0);
-            events.sort((a,b)=>a.date-b.date);
-            list.innerHTML = events.map(ev => `
-                <div class="bg-amber-50 p-3 rounded-xl border border-amber-100 cursor-pointer" onclick="window.openDetail('${ev.id}')">
-                    <div class="text-amber-600 font-bold text-sm">${ev.date.getMonth()+1}/${ev.date.getDate()}</div>
-                    <div class="font-bold text-slate-800 text-sm truncate">${ev.name}</div>
-                </div>`).join('');
-        }
+        };
 
         window.handleAuth = () => signInWithPopup(auth, provider);
         window.handleLogout = () => signOut(auth);
