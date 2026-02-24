@@ -52,16 +52,13 @@
                 <div id="pinned-list" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
             </div>
 
-            <!-- 近期提醒區塊 -->
             <div id="upcoming-section" class="mb-10 hidden">
                 <h3 class="text-sm font-bold text-amber-600 mb-3 flex items-center tracking-widest uppercase"><i class="fas fa-hourglass-half mr-2"></i>近期提醒 (未來 14 天)</h3>
                 <div id="upcoming-list" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
             </div>
 
             <div class="flex justify-between items-end mb-6">
-                <div>
-                    <h2 class="text-3xl font-bold text-slate-900">升學行事曆</h2>
-                </div>
+                <div><h2 class="text-3xl font-bold text-slate-900">升學行事曆</h2></div>
                 <button id="addSchoolBtn" class="hidden bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-base font-bold shadow-lg" onclick="window.openSchoolModal(null)">
                     <i class="fas fa-plus mr-1"></i>新增校系
                 </button>
@@ -84,13 +81,35 @@
         <section id="bulletin-section" class="hidden">
             <div class="flex justify-between items-center mb-8">
                 <h2 class="text-3xl font-bold text-slate-800">最新公告</h2>
-                <button id="addPostBtn" class="hidden bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-base font-bold" onclick="window.openPostModal(null)">發布公告</button>
+                <button id="addPostBtn" class="hidden bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-base font-bold" onclick="window.openPostModal(null)">
+                    <i class="fas fa-pen mr-2"></i>發布公告
+                </button>
             </div>
             <div id="announcement-list" class="space-y-4"></div>
         </section>
     </main>
 
-    <!-- Modals -->
+    <!-- 公告發布彈窗 -->
+    <div id="postModal" class="fixed inset-0 bg-slate-900/60 hidden z-[110] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl">
+            <h3 class="text-2xl font-bold mb-6" id="postModalTitle">發布新公告</h3>
+            <div class="space-y-4">
+                <input type="hidden" id="editPostId">
+                <input type="text" id="postTitle" placeholder="公告標題" class="w-full px-4 py-3 bg-slate-50 border rounded-xl font-bold text-lg">
+                <textarea id="postContent" rows="6" placeholder="公告內容 (支援 Markdown 表格)" class="w-full px-4 py-3 bg-slate-50 border rounded-xl font-mono"></textarea>
+                <div class="flex items-center space-x-3 bg-red-50 p-4 rounded-xl border border-red-100">
+                    <input type="checkbox" id="postPinned" class="w-5 h-5 text-red-600 rounded">
+                    <label for="postPinned" class="text-red-700 font-bold">設為重要置頂 (會出現在首頁最上方)</label>
+                </div>
+            </div>
+            <div class="flex space-x-3 pt-6 border-t mt-6">
+                <button onclick="window.closePostModal()" class="flex-1 py-3 font-bold text-slate-400">取消</button>
+                <button id="savePostBtn" onclick="window.savePost()" class="flex-[2] bg-indigo-600 text-white py-3 rounded-xl font-bold">確認發布</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 其他 Modals (校系/細節/連結/閱讀) -->
     <div id="schoolModal" class="fixed inset-0 bg-slate-900/60 hidden z-[110] flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl">
             <h3 class="text-2xl font-bold mb-6" id="schoolModalTitle">編輯校系</h3>
@@ -109,7 +128,7 @@
     </div>
 
     <div id="detailModal" class="fixed inset-0 bg-slate-900/60 hidden z-[100] flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl overflow-hidden">
+        <div class="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl">
             <div class="flex justify-between items-start mb-6"><div id="detailHeader"></div><button onclick="window.closeDetail()" class="text-slate-400"><i class="fas fa-times"></i></button></div>
             <div id="detailTimeline" class="max-h-[50vh] overflow-y-auto pr-2"></div>
             <button id="quickEditBtn" class="w-full mt-6 py-3 bg-indigo-50 text-indigo-600 rounded-xl font-bold hidden">編輯卡片內容</button>
@@ -122,7 +141,7 @@
                 <h3 id="readTitle" class="text-2xl font-bold"></h3>
                 <button onclick="document.getElementById('readModal').classList.add('hidden')"><i class="fas fa-times text-xl"></i></button>
             </div>
-            <div class="p-8 overflow-y-auto"><div id="readContent" class="markdown-body"></div></div>
+            <div class="p-8 overflow-y-auto bg-white"><div id="readContent" class="markdown-body"></div></div>
         </div>
     </div>
 
@@ -159,6 +178,7 @@
         const ADMIN_EMAILS = ["ljuzem115@ppsh.ptc.edu.tw", "fuwen@ppsh.ptc.edu.tw", "jinglan@ppsh.ptc.edu.tw", "tulip520@ppsh.ptc.edu.tw"];
 
         let displaySchools = [];
+        let announcements = [];
         let currentTab = 'sheet1';
         let sortableInstance = null;
 
@@ -168,7 +188,7 @@
                 const snap = await getDocs(q);
                 displaySchools = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 renderGrid();
-                renderUpcomingEvents(); // 核心：渲染近期提醒
+                renderUpcomingEvents();
             } catch(e) { console.error(e); }
         }
 
@@ -176,12 +196,7 @@
             const grid = document.getElementById('calendar-grid');
             const filtered = displaySchools.filter(s => s.type === currentTab);
             const isAdmin = auth.currentUser && ADMIN_EMAILS.includes(auth.currentUser.email);
-
-            if(filtered.length === 0) {
-                grid.innerHTML = `<div class="col-span-2 text-center py-12 text-slate-400">目前此分類尚無資料</div>`;
-                return;
-            }
-
+            if(filtered.length === 0) { grid.innerHTML = `<div class="col-span-2 text-center py-12 text-slate-400">目前尚無資料</div>`; return; }
             grid.innerHTML = filtered.map(s => `
                 <div class="school-card" data-id="${s.id}" onclick="window.openDetail('${s.id}')">
                     <div class="card-drag-handle" style="${isAdmin?'display:block':''}"><i class="fas fa-bars"></i></div>
@@ -189,12 +204,8 @@
                         <h3 class="text-xl font-bold text-slate-900">${s.name}</h3>
                         <div class="recent-tag">${s.events?.[0]?.m || '--'}月 ${s.events?.[0]?.e || '點擊查看詳情'}</div>
                     </div>
-                    <div class="text-xs text-slate-400 mt-4 pt-4 border-t flex justify-between items-center">
-                        <span>查看詳細時程</span><i class="fas fa-chevron-right"></i>
-                    </div>
-                </div>
-            `).join('');
-
+                    <div class="text-xs text-slate-400 mt-4 pt-4 border-t flex justify-between items-center"><span>查看時程</span><i class="fas fa-chevron-right"></i></div>
+                </div>`).join('');
             if (isAdmin) initSortable();
         }
 
@@ -202,9 +213,7 @@
             const el = document.getElementById('calendar-grid');
             if(sortableInstance) sortableInstance.destroy();
             sortableInstance = new Sortable(el, {
-                handle: '.card-drag-handle',
-                animation: 150,
-                ghostClass: 'sortable-ghost',
+                handle: '.card-drag-handle', animation: 150, ghostClass: 'sortable-ghost',
                 onEnd: async function() {
                     const cards = Array.from(el.children);
                     for(let i=0; i<cards.length; i++) {
@@ -215,132 +224,147 @@
             });
         }
 
-        // 修正後的近期提醒功能
         function renderUpcomingEvents() {
             const section = document.getElementById('upcoming-section');
             const list = document.getElementById('upcoming-list');
-            
-            // 取得「今天」的午夜時間，確保能包含今天發生的事
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
-            // 取得「14天後」的結束時間
-            const limit = new Date(today);
-            limit.setDate(today.getDate() + 14);
-            limit.setHours(23, 59, 59, 999);
-
+            const today = new Date(); today.setHours(0,0,0,0);
+            const limit = new Date(today); limit.setDate(today.getDate() + 14);
             let events = [];
-            displaySchools.forEach(s => {
-                s.events?.forEach(e => {
-                    const m = parseInt(e.m);
-                    const d = parseInt(e.d) || 1; // 如果日期是"中旬"等文字，預設為1日
-                    if(!m) return;
-
-                    // 自動判斷年份：如果月份比現在小，視為明年
-                    let year = today.getFullYear();
-                    if (m < today.getMonth() + 1 && today.getMonth() > 8) year++;
-                    
-                    const eventDate = new Date(year, m - 1, d);
-                    
-                    // 判斷是否在 14 天內
-                    if (eventDate >= today && eventDate <= limit) {
-                        events.push({ date: eventDate, name: s.name, e: e.e, id: s.id });
-                    }
-                });
-            });
-
-            if (events.length === 0) {
-                section.classList.add('hidden');
-            } else {
-                section.classList.remove('hidden');
-                events.sort((a,b) => a.date - b.date);
-                list.innerHTML = events.map(ev => `
-                    <div class="bg-amber-50 p-3 rounded-xl border border-amber-100 cursor-pointer hover:bg-amber-100 transition" onclick="window.openDetail('${ev.id}')">
-                        <div class="text-amber-600 font-bold text-sm">${ev.date.getMonth()+1}/${ev.date.getDate()}</div>
-                        <div class="font-bold text-slate-800 text-sm truncate">${ev.name}</div>
-                        <div class="text-[10px] text-slate-500 truncate">${ev.e}</div>
-                    </div>
-                `).join('');
-            }
+            displaySchools.forEach(s => s.events?.forEach(e => {
+                const m = parseInt(e.m); const d = parseInt(e.d) || 1;
+                if(!m) return;
+                let year = today.getFullYear();
+                if (m < today.getMonth() + 1 && today.getMonth() > 8) year++;
+                const eventDate = new Date(year, m - 1, d);
+                if (eventDate >= today && eventDate <= limit) events.push({ date: eventDate, name: s.name, e: e.e, id: s.id });
+            }));
+            section.classList.toggle('hidden', events.length === 0);
+            events.sort((a,b) => a.date - b.date);
+            list.innerHTML = events.map(ev => `
+                <div class="bg-amber-50 p-3 rounded-xl border border-amber-100 cursor-pointer hover:bg-amber-100 transition" onclick="window.openDetail('${ev.id}')">
+                    <div class="text-amber-600 font-bold text-sm">${ev.date.getMonth()+1}/${ev.date.getDate()}</div>
+                    <div class="font-bold text-slate-800 text-sm truncate">${ev.name}</div>
+                    <div class="text-[10px] text-slate-500 truncate">${ev.e}</div>
+                </div>`).join('');
         }
+
+        // 公告管理邏輯
+        async function loadAnnouncements() {
+            const q = query(collection(db, "announcements"), orderBy("createdAt", "desc"));
+            const snap = await getDocs(q);
+            announcements = snap.docs.map(d => ({id: d.id, ...d.data()}));
+            
+            const isAdmin = auth.currentUser && ADMIN_EMAILS.includes(auth.currentUser.email);
+            
+            // 渲染列表
+            document.getElementById('announcement-list').innerHTML = announcements.map(p => `
+                <div class="bg-white p-5 rounded-2xl border flex justify-between items-center group">
+                    <div class="cursor-pointer flex-1" onclick="window.readPost('${p.id}')">
+                        <h4 class="font-bold text-lg group-hover:text-indigo-600 transition">${p.title}</h4>
+                        <div class="text-xs text-slate-400 mt-1">${p.createdAt?.toDate().toLocaleDateString() || '剛剛'} ${p.isPinned ? '· <span class="text-red-500 font-bold">置頂中</span>' : ''}</div>
+                    </div>
+                    ${isAdmin ? `<div class="flex space-x-2"><button onclick="window.openPostModal('${p.id}')" class="text-indigo-500 text-sm font-bold p-2">編輯</button><button onclick="window.deletePost('${p.id}')" class="text-red-300 hover:text-red-500 p-2"><i class="fas fa-trash"></i></button></div>` : ''}
+                </div>`).join('');
+
+            // 渲染首頁置頂
+            const pinned = announcements.filter(p => p.isPinned);
+            document.getElementById('pinned-section').classList.toggle('hidden', pinned.length === 0);
+            document.getElementById('pinned-list').innerHTML = pinned.map(p => `
+                <div class="bg-red-50 border-red-100 border p-4 rounded-xl cursor-pointer hover:shadow-md transition" onclick="window.readPost('${p.id}')">
+                    <div class="text-[10px] font-bold text-red-500 mb-1">重要公告</div>
+                    <div class="font-bold text-slate-800 truncate">${p.title}</div>
+                </div>`).join('');
+        }
+
+        window.openPostModal = (id) => {
+            if(id) {
+                const p = announcements.find(a => a.id === id);
+                document.getElementById('editPostId').value = id;
+                document.getElementById('postTitle').value = p.title;
+                document.getElementById('postContent').value = p.content;
+                document.getElementById('postPinned').checked = p.isPinned || false;
+                document.getElementById('postModalTitle').innerText = "編輯公告";
+            } else {
+                document.getElementById('editPostId').value = '';
+                document.getElementById('postTitle').value = '';
+                document.getElementById('postContent').value = '';
+                document.getElementById('postPinned').checked = false;
+                document.getElementById('postModalTitle').innerText = "發布新公告";
+            }
+            document.getElementById('postModal').classList.remove('hidden');
+        };
+
+        window.savePost = async () => {
+            const id = document.getElementById('editPostId').value;
+            const title = document.getElementById('postTitle').value;
+            const content = document.getElementById('postContent').value;
+            const isPinned = document.getElementById('postPinned').checked;
+            if(!title) return alert("請輸入標題");
+            const data = { title, content, isPinned, createdAt: serverTimestamp() };
+            try {
+                if(id) await updateDoc(doc(db, "announcements", id), data);
+                else await addDoc(collection(db, "announcements"), data);
+                window.closePostModal(); loadAnnouncements();
+            } catch(e) { alert("發布失敗"); }
+        };
+
+        window.deletePost = async (id) => { if(confirm("確定刪除此公告？")) { await deleteDoc(doc(db, "announcements", id)); loadAnnouncements(); } };
+        window.closePostModal = () => document.getElementById('postModal').classList.add('hidden');
+        window.readPost = (id) => {
+            const p = announcements.find(a => a.id === id);
+            document.getElementById('readTitle').innerText = p.title;
+            document.getElementById('readContent').innerHTML = marked.parse(p.content);
+            document.getElementById('readModal').classList.remove('hidden');
+        };
 
         // 外部連結渲染
         async function loadLinks() {
             const snap = await getDocs(collection(db, "external_links"));
             const links = snap.docs.map(d => ({id: d.id, ...d.data()}));
             document.getElementById('external-links-grid').innerHTML = links.map(l => `
-                <a href="${l.url}" target="_blank" class="bg-white p-4 rounded-xl border flex items-center space-x-3 hover:shadow-md transition">
-                    <i class="fas fa-link text-indigo-500"></i>
-                    <span class="font-bold text-slate-700 truncate">${l.name}</span>
-                </a>`).join('');
-
+                <a href="${l.url}" target="_blank" class="bg-white p-4 rounded-xl border flex items-center space-x-3 hover:shadow-md transition"><i class="fas fa-link text-indigo-500"></i><span class="font-bold text-slate-700 truncate">${l.name}</span></a>`).join('');
             document.getElementById('manageLinkList').innerHTML = links.map(l => `
-                <div class="flex justify-between items-center bg-white p-3 rounded-lg border">
-                    <span class="font-bold truncate mr-2">${l.name}</span>
-                    <button onclick="window.deleteLink('${l.id}')" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button>
-                </div>`).join('');
+                <div class="flex justify-between items-center bg-white p-3 rounded-lg border"><span class="font-bold truncate mr-2">${l.name}</span><button onclick="window.deleteLink('${l.id}')" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button></div>`).join('');
         }
 
         window.addLink = async () => {
-            const name = document.getElementById('newLinkName').value;
-            const url = document.getElementById('newLinkUrl').value;
-            if(!name || !url) return alert("請填寫完整內容");
+            const name = document.getElementById('newLinkName').value; const url = document.getElementById('newLinkUrl').value;
+            if(!name || !url) return alert("請填寫完整");
             await addDoc(collection(db, "external_links"), { name, url, createdAt: serverTimestamp() });
-            document.getElementById('newLinkName').value = ''; document.getElementById('newLinkUrl').value = '';
-            loadLinks();
+            document.getElementById('newLinkName').value = ''; document.getElementById('newLinkUrl').value = ''; loadLinks();
         };
+        window.deleteLink = async (id) => { if(confirm("刪除？")) { await deleteDoc(doc(db, "external_links", id)); loadLinks(); } };
 
-        window.deleteLink = async (id) => {
-            if(confirm("確定刪除此推薦連結？")) { await deleteDoc(doc(db, "external_links", id)); loadLinks(); }
-        };
-
+        // 頁面基礎功能
         window.switchTab = (t) => {
             currentTab = t;
-            const btns = ['tab-sheet1', 'tab-sheet2', 'tab-sheet3'];
-            btns.forEach(id => {
-                const b = document.getElementById(id);
-                const isActive = (id === 'tab-'+t);
-                b.className = isActive ? "flex-1 py-3 text-center rounded-xl font-bold text-lg transition-all bg-indigo-600 text-white shadow-md" 
-                                       : "flex-1 py-3 text-center rounded-xl font-bold text-lg transition-all text-slate-500 hover:bg-white/50";
+            ['tab-sheet1', 'tab-sheet2', 'tab-sheet3'].forEach(id => {
+                const b = document.getElementById(id); const isActive = (id === 'tab-'+t);
+                b.className = isActive ? "flex-1 py-3 text-center rounded-xl font-bold text-lg transition-all bg-indigo-600 text-white shadow-md" : "flex-1 py-3 text-center rounded-xl font-bold text-lg transition-all text-slate-500 hover:bg-white/50";
             });
             renderGrid();
         };
 
         window.openDetail = (id) => {
             const s = displaySchools.find(i => i.id === id);
-            if(!s) return;
             document.getElementById('detailHeader').innerHTML = `<h3 class="text-2xl font-bold">${s.name}</h3>`;
-            document.getElementById('detailTimeline').innerHTML = (s.events||[]).map(e => `
-                <div class="timeline-item">
-                    <div class="text-xs font-bold text-indigo-500">${e.m}月 ${e.d}日</div>
-                    <div class="font-bold text-slate-800">${e.e}</div>
-                </div>`).join('');
+            document.getElementById('detailTimeline').innerHTML = (s.events||[]).map(e => `<div class="timeline-item"><div class="text-xs font-bold text-indigo-500">${e.m}月 ${e.d}日</div><div class="font-bold text-slate-800">${e.e}</div></div>`).join('');
             const isAdmin = auth.currentUser && ADMIN_EMAILS.includes(auth.currentUser.email);
-            const editBtn = document.getElementById('quickEditBtn');
-            editBtn.classList.toggle('hidden', !isAdmin);
-            editBtn.onclick = () => { window.closeDetail(); window.openSchoolModal(id); };
+            document.getElementById('quickEditBtn').classList.toggle('hidden', !isAdmin);
+            document.getElementById('quickEditBtn').onclick = () => { window.closeDetail(); window.openSchoolModal(id); };
             document.getElementById('detailModal').classList.remove('hidden');
         };
 
         window.addEventInput = (m='', d='', e='') => {
-            const div = document.createElement('div');
-            div.className = "flex space-x-2 items-center bg-slate-50 p-2 rounded-lg";
-            div.innerHTML = `
-                <input type="text" placeholder="月" value="${m}" class="w-12 p-2 border rounded-lg">
-                <input type="text" placeholder="日" value="${d}" class="w-16 p-2 border rounded-lg">
-                <input type="text" placeholder="事項" value="${e}" class="flex-1 p-2 border rounded-lg">
-                <button onclick="this.parentElement.remove()" class="text-red-300 px-2"><i class="fas fa-times"></i></button>`;
+            const div = document.createElement('div'); div.className = "flex space-x-2 items-center bg-slate-50 p-2 rounded-lg";
+            div.innerHTML = `<input type="text" placeholder="月" value="${m}" class="w-12 p-2 border rounded-lg"><input type="text" placeholder="日" value="${d}" class="w-16 p-2 border rounded-lg"><input type="text" placeholder="事項" value="${e}" class="flex-1 p-2 border rounded-lg"><button onclick="this.parentElement.remove()" class="text-red-300 px-2"><i class="fas fa-times"></i></button>`;
             document.getElementById('eventInputs').appendChild(div);
         };
 
         document.getElementById('saveSchoolBtn').onclick = async () => {
-            const id = document.getElementById('editSchoolId').value;
-            const name = document.getElementById('schoolName').value;
-            const type = document.getElementById('editSchoolType').value;
-            const events = Array.from(document.getElementById('eventInputs').children).map(r => ({
-                m: r.children[0].value, d: r.children[1].value, e: r.children[2].value
-            }));
-            if(!name) return alert("校系名稱不能為空");
+            const id = document.getElementById('editSchoolId').value; const name = document.getElementById('schoolName').value; const type = document.getElementById('editSchoolType').value;
+            const events = Array.from(document.getElementById('eventInputs').children).map(r => ({ m: r.children[0].value, d: r.children[1].value, e: r.children[2].value }));
+            if(!name) return alert("名稱必填");
             const data = { name, type, events, updatedAt: serverTimestamp() };
             if(id) await updateDoc(doc(db, "calendar_db", id), data);
             else { data.order = displaySchools.length; await addDoc(collection(db, "calendar_db"), data); }
@@ -351,62 +375,22 @@
             document.getElementById('eventInputs').innerHTML = '';
             if(id) {
                 const s = displaySchools.find(i => i.id === id);
-                document.getElementById('editSchoolId').value = id;
-                document.getElementById('editSchoolType').value = s.type;
-                document.getElementById('schoolName').value = s.name;
+                document.getElementById('editSchoolId').value = id; document.getElementById('editSchoolType').value = s.type; document.getElementById('schoolName').value = s.name;
                 s.events?.forEach(e => window.addEventInput(e.m, e.d, e.e));
                 document.getElementById('deleteSchoolBtn').classList.remove('hidden');
             } else {
-                document.getElementById('editSchoolId').value = '';
-                document.getElementById('editSchoolType').value = currentTab;
-                document.getElementById('schoolName').value = '';
-                window.addEventInput();
-                document.getElementById('deleteSchoolBtn').classList.add('hidden');
+                document.getElementById('editSchoolId').value = ''; document.getElementById('editSchoolType').value = currentTab; document.getElementById('schoolName').value = '';
+                window.addEventInput(); document.getElementById('deleteSchoolBtn').classList.add('hidden');
             }
             document.getElementById('schoolModal').classList.remove('hidden');
         };
 
-        window.deleteSchool = async () => {
-            if(confirm("確定要刪除這個校系卡片嗎？此操作不可恢復。")) {
-                await deleteDoc(doc(db, "calendar_db", document.getElementById('editSchoolId').value));
-                window.closeSchoolModal(); loadSchools();
-            }
-        };
-
-        async function loadAnnouncements() {
-            const q = query(collection(db, "announcements"), orderBy("createdAt", "desc"));
-            const snap = await getDocs(q);
-            const list = snap.docs.map(d => ({id: d.id, ...d.data()}));
-            document.getElementById('announcement-list').innerHTML = list.map(p => `
-                <div class="bg-white p-5 rounded-2xl border cursor-pointer hover:border-indigo-300" onclick="window.readPost('${p.id}')">
-                    <h4 class="font-bold text-lg">${p.title}</h4>
-                    <div class="text-xs text-slate-400 mt-1">${p.createdAt?.toDate().toLocaleDateString() || '剛剛'}</div>
-                </div>`).join('');
-            const pinned = list.filter(p => p.isPinned);
-            document.getElementById('pinned-section').classList.toggle('hidden', pinned.length === 0);
-            document.getElementById('pinned-list').innerHTML = pinned.map(p => `
-                <div class="bg-red-50 border-red-100 border p-4 rounded-xl cursor-pointer" onclick="window.readPost('${p.id}')">
-                    <div class="text-[10px] font-bold text-red-500 mb-1">重要</div>
-                    <div class="font-bold text-slate-800 truncate">${p.title}</div>
-                </div>`).join('');
-        }
-
-        window.readPost = async (id) => {
-            const snap = await getDocs(collection(db, "announcements"));
-            const p = snap.docs.find(d => d.id === id).data();
-            document.getElementById('readTitle').innerText = p.title;
-            document.getElementById('readContent').innerHTML = marked.parse(p.content);
-            document.getElementById('readModal').classList.remove('hidden');
-        };
-
+        window.deleteSchool = async () => { if(confirm("確定刪除？")) { await deleteDoc(doc(db, "calendar_db", document.getElementById('editSchoolId').value)); window.closeSchoolModal(); loadSchools(); } };
         window.handleAuth = () => signInWithPopup(auth, provider);
         window.handleLogout = () => signOut(auth);
         window.closeSchoolModal = () => document.getElementById('schoolModal').classList.add('hidden');
         window.closeDetail = () => document.getElementById('detailModal').classList.add('hidden');
-        window.showSection = (s) => {
-            document.getElementById('home-section').classList.toggle('hidden', s!=='home');
-            document.getElementById('bulletin-section').classList.toggle('hidden', s!=='bulletin');
-        };
+        window.showSection = (s) => { document.getElementById('home-section').classList.toggle('hidden', s!=='home'); document.getElementById('bulletin-section').classList.toggle('hidden', s!=='bulletin'); };
 
         onAuthStateChanged(auth, (user) => {
             const isAdmin = user && ADMIN_EMAILS.includes(user.email);
