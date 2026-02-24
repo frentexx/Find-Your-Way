@@ -18,10 +18,9 @@
         .timeline-item { position: relative; padding-left: 2rem; border-left: 2px solid #e2e8f0; margin-left: 1rem; padding-bottom: 1.5rem; }
         .timeline-item::before { content: ""; position: absolute; left: -7px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: #6366f1; border: 2px solid white; }
         .card-drag-handle { position: absolute; top: 12px; right: 12px; padding: 8px; cursor: grab; color: #cbd5e1; z-index: 20; display: none; }
-        .card-drag-handle:hover { color: #6366f1; }
-        .sortable-ghost { opacity: 0.3; background: #e0e7ff; border: 2px dashed #6366f1; }
         .markdown-body table { width: 100%; border-collapse: collapse; margin: 1em 0; border: 1px solid #cbd5e1; display: block; overflow-x: auto; }
         .markdown-body th, .markdown-body td { border: 1px solid #cbd5e1; padding: 0.5em 1em; }
+        .markdown-body a { color: #4f46e5; text-decoration: underline; }
     </style>
 </head>
 <body class="pb-24">
@@ -35,10 +34,10 @@
             <div class="flex items-center space-x-1 md:space-x-3">
                 <button onclick="window.showSection('home')" class="text-base font-bold text-slate-600 px-2 hover:text-indigo-600">行事曆</button>
                 <button onclick="window.showSection('bulletin')" class="text-base font-bold text-slate-600 px-2 hover:text-indigo-600">公告</button>
-                <a href="https://frentexx.github.io/screening-strategy/" target="_blank" class="text-base font-bold text-slate-600 px-2 hover:text-indigo-600 no-underline hidden md:inline-block"><i class="fas fa-filter mr-1"></i>篩選策略</a>
+                <a href="https://frentexx.github.io/screening-strategy/" target="_blank" class="text-base font-bold text-slate-600 px-2 hover:text-indigo-600 hidden md:inline-block"><i class="fas fa-filter mr-1"></i>篩選策略</a>
                 <button id="loginBtn" onclick="window.handleAuth()" class="bg-indigo-50 text-indigo-700 px-4 py-2 rounded-full text-sm font-bold border border-indigo-100">管理</button>
                 <div id="adminPanel" class="hidden flex items-center space-x-1">
-                    <button onclick="document.getElementById('linkModal').classList.remove('hidden')" class="text-sm bg-slate-100 px-3 py-2 rounded-lg font-bold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600"><i class="fas fa-link mr-1"></i>連結</button>
+                    <button onclick="document.getElementById('linkModal').classList.remove('hidden')" class="text-sm bg-slate-100 px-3 py-2 rounded-lg font-bold text-slate-600"><i class="fas fa-link mr-1"></i>連結</button>
                     <button onclick="window.handleLogout()" class="text-sm text-red-500 font-bold px-2 hover:text-red-700">登出</button>
                 </div>
             </div>
@@ -58,7 +57,7 @@
             </div>
 
             <div class="flex justify-between items-end mb-6">
-                <div><h2 class="text-3xl font-bold text-slate-900">升學行事曆</h2></div>
+                <h2 class="text-3xl font-bold text-slate-900">升學行事曆</h2>
                 <button id="addSchoolBtn" class="hidden bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-base font-bold shadow-lg" onclick="window.openSchoolModal(null)">
                     <i class="fas fa-plus mr-1"></i>新增校系
                 </button>
@@ -90,26 +89,56 @@
     </main>
 
     <!-- 公告發布彈窗 -->
-    <div id="postModal" class="fixed inset-0 bg-slate-900/60 hidden z-[110] flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl">
-            <h3 class="text-2xl font-bold mb-6" id="postModalTitle">發布新公告</h3>
+    <div id="postModal" class="fixed inset-0 bg-slate-900/60 hidden z-[110] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl overflow-y-auto max-h-[90vh]">
+            <h3 class="text-2xl font-bold mb-6" id="postModalTitle">發布公告</h3>
             <div class="space-y-4">
                 <input type="hidden" id="editPostId">
-                <input type="text" id="postTitle" placeholder="公告標題" class="w-full px-4 py-3 bg-slate-50 border rounded-xl font-bold text-lg">
-                <textarea id="postContent" rows="6" placeholder="公告內容 (支援 Markdown 表格)" class="w-full px-4 py-3 bg-slate-50 border rounded-xl font-mono"></textarea>
-                <div class="flex items-center space-x-3 bg-red-50 p-4 rounded-xl border border-red-100">
+                <div>
+                    <label class="text-sm font-bold text-slate-400 mb-1 block">公告標題</label>
+                    <input type="text" id="postTitle" class="w-full px-4 py-3 bg-slate-50 border rounded-xl font-bold text-lg">
+                </div>
+                <div>
+                    <label class="text-sm font-bold text-slate-400 mb-1 block">內容 (支援 Markdown 表格、連結)</label>
+                    <textarea id="postContent" rows="5" class="w-full px-4 py-3 bg-slate-50 border rounded-xl font-mono text-sm"></textarea>
+                </div>
+                <div class="bg-indigo-50 p-4 rounded-xl space-y-3">
+                    <label class="text-xs font-bold text-indigo-500 uppercase">附加行動按鈕 (選填)</label>
+                    <input type="text" id="postLinkName" placeholder="按鈕顯示文字 (例如: 點我開始使用)" class="w-full px-3 py-2 border rounded-lg text-sm">
+                    <input type="text" id="postLinkUrl" placeholder="按鈕連結網址 (https://...)" class="w-full px-3 py-2 border rounded-lg text-sm">
+                </div>
+                <div class="flex items-center space-x-3 bg-red-50 p-4 rounded-xl">
                     <input type="checkbox" id="postPinned" class="w-5 h-5 text-red-600 rounded">
-                    <label for="postPinned" class="text-red-700 font-bold">設為重要置頂 (會出現在首頁最上方)</label>
+                    <label for="postPinned" class="text-red-700 font-bold">設為重要置頂</label>
                 </div>
             </div>
             <div class="flex space-x-3 pt-6 border-t mt-6">
                 <button onclick="window.closePostModal()" class="flex-1 py-3 font-bold text-slate-400">取消</button>
-                <button id="savePostBtn" onclick="window.savePost()" class="flex-[2] bg-indigo-600 text-white py-3 rounded-xl font-bold">確認發布</button>
+                <button onclick="window.savePost()" class="flex-[2] bg-indigo-600 text-white py-3 rounded-xl font-bold">確認發布</button>
             </div>
         </div>
     </div>
 
-    <!-- 其他 Modals (校系/細節/連結/閱讀) -->
+    <!-- 閱讀視窗 -->
+    <div id="readModal" class="fixed inset-0 bg-slate-900/60 hidden z-[120] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-6 border-b flex justify-between items-center bg-slate-50">
+                <h3 id="readTitle" class="text-2xl font-bold"></h3>
+                <button onclick="document.getElementById('readModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-800"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="p-8 overflow-y-auto bg-white custom-scrollbar">
+                <div id="readContent" class="markdown-body"></div>
+                <!-- 醒目的行動按鈕 -->
+                <div id="readLinkArea" class="mt-8 hidden">
+                    <a id="readLinkBtn" href="#" target="_blank" class="flex items-center justify-center w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg shadow-lg hover:bg-indigo-700 transition">
+                        <i class="fas fa-external-link-alt mr-2"></i> <span id="readLinkText">前往連結</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 其他基礎 Modal (校系/細節/連結) -->
     <div id="schoolModal" class="fixed inset-0 bg-slate-900/60 hidden z-[110] flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl">
             <h3 class="text-2xl font-bold mb-6" id="schoolModalTitle">編輯校系</h3>
@@ -131,17 +160,7 @@
         <div class="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl">
             <div class="flex justify-between items-start mb-6"><div id="detailHeader"></div><button onclick="window.closeDetail()" class="text-slate-400"><i class="fas fa-times"></i></button></div>
             <div id="detailTimeline" class="max-h-[50vh] overflow-y-auto pr-2"></div>
-            <button id="quickEditBtn" class="w-full mt-6 py-3 bg-indigo-50 text-indigo-600 rounded-xl font-bold hidden">編輯卡片內容</button>
-        </div>
-    </div>
-
-    <div id="readModal" class="fixed inset-0 bg-slate-900/60 hidden z-[120] flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="p-6 border-b flex justify-between bg-slate-50">
-                <h3 id="readTitle" class="text-2xl font-bold"></h3>
-                <button onclick="document.getElementById('readModal').classList.add('hidden')"><i class="fas fa-times text-xl"></i></button>
-            </div>
-            <div class="p-8 overflow-y-auto bg-white"><div id="readContent" class="markdown-body"></div></div>
+            <button id="quickEditBtn" class="w-full mt-6 py-3 bg-indigo-50 text-indigo-600 rounded-xl font-bold hidden">編輯卡片</button>
         </div>
     </div>
 
@@ -183,13 +202,11 @@
         let sortableInstance = null;
 
         async function loadSchools() {
-            try {
-                const q = query(collection(db, "calendar_db"), orderBy("order", "asc"));
-                const snap = await getDocs(q);
-                displaySchools = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                renderGrid();
-                renderUpcomingEvents();
-            } catch(e) { console.error(e); }
+            const q = query(collection(db, "calendar_db"), orderBy("order", "asc"));
+            const snap = await getDocs(q);
+            displaySchools = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            renderGrid();
+            renderUpcomingEvents();
         }
 
         function renderGrid() {
@@ -241,22 +258,17 @@
             section.classList.toggle('hidden', events.length === 0);
             events.sort((a,b) => a.date - b.date);
             list.innerHTML = events.map(ev => `
-                <div class="bg-amber-50 p-3 rounded-xl border border-amber-100 cursor-pointer hover:bg-amber-100 transition" onclick="window.openDetail('${ev.id}')">
+                <div class="bg-amber-50 p-3 rounded-xl border border-amber-100 cursor-pointer" onclick="window.openDetail('${ev.id}')">
                     <div class="text-amber-600 font-bold text-sm">${ev.date.getMonth()+1}/${ev.date.getDate()}</div>
                     <div class="font-bold text-slate-800 text-sm truncate">${ev.name}</div>
-                    <div class="text-[10px] text-slate-500 truncate">${ev.e}</div>
                 </div>`).join('');
         }
 
-        // 公告管理邏輯
         async function loadAnnouncements() {
             const q = query(collection(db, "announcements"), orderBy("createdAt", "desc"));
             const snap = await getDocs(q);
             announcements = snap.docs.map(d => ({id: d.id, ...d.data()}));
-            
             const isAdmin = auth.currentUser && ADMIN_EMAILS.includes(auth.currentUser.email);
-            
-            // 渲染列表
             document.getElementById('announcement-list').innerHTML = announcements.map(p => `
                 <div class="bg-white p-5 rounded-2xl border flex justify-between items-center group">
                     <div class="cursor-pointer flex-1" onclick="window.readPost('${p.id}')">
@@ -265,8 +277,6 @@
                     </div>
                     ${isAdmin ? `<div class="flex space-x-2"><button onclick="window.openPostModal('${p.id}')" class="text-indigo-500 text-sm font-bold p-2">編輯</button><button onclick="window.deletePost('${p.id}')" class="text-red-300 hover:text-red-500 p-2"><i class="fas fa-trash"></i></button></div>` : ''}
                 </div>`).join('');
-
-            // 渲染首頁置頂
             const pinned = announcements.filter(p => p.isPinned);
             document.getElementById('pinned-section').classList.toggle('hidden', pinned.length === 0);
             document.getElementById('pinned-list').innerHTML = pinned.map(p => `
@@ -280,16 +290,15 @@
             if(id) {
                 const p = announcements.find(a => a.id === id);
                 document.getElementById('editPostId').value = id;
-                document.getElementById('postTitle').value = p.title;
-                document.getElementById('postContent').value = p.content;
+                document.getElementById('postTitle').value = p.title || '';
+                document.getElementById('postContent').value = p.content || '';
+                document.getElementById('postLinkName').value = p.linkName || '';
+                document.getElementById('postLinkUrl').value = p.linkUrl || '';
                 document.getElementById('postPinned').checked = p.isPinned || false;
-                document.getElementById('postModalTitle').innerText = "編輯公告";
             } else {
-                document.getElementById('editPostId').value = '';
-                document.getElementById('postTitle').value = '';
-                document.getElementById('postContent').value = '';
-                document.getElementById('postPinned').checked = false;
-                document.getElementById('postModalTitle').innerText = "發布新公告";
+                document.getElementById('editPostId').value = ''; document.getElementById('postTitle').value = '';
+                document.getElementById('postContent').value = ''; document.getElementById('postLinkName').value = '';
+                document.getElementById('postLinkUrl').value = ''; document.getElementById('postPinned').checked = false;
             }
             document.getElementById('postModal').classList.remove('hidden');
         };
@@ -298,44 +307,47 @@
             const id = document.getElementById('editPostId').value;
             const title = document.getElementById('postTitle').value;
             const content = document.getElementById('postContent').value;
+            const linkName = document.getElementById('postLinkName').value;
+            const linkUrl = document.getElementById('postLinkUrl').value;
             const isPinned = document.getElementById('postPinned').checked;
             if(!title) return alert("請輸入標題");
-            const data = { title, content, isPinned, createdAt: serverTimestamp() };
+            const data = { title, content, linkName, linkUrl, isPinned, createdAt: serverTimestamp() };
             try {
                 if(id) await updateDoc(doc(db, "announcements", id), data);
                 else await addDoc(collection(db, "announcements"), data);
                 window.closePostModal(); loadAnnouncements();
-            } catch(e) { alert("發布失敗"); }
+            } catch(e) { alert("失敗"); }
         };
 
-        window.deletePost = async (id) => { if(confirm("確定刪除此公告？")) { await deleteDoc(doc(db, "announcements", id)); loadAnnouncements(); } };
-        window.closePostModal = () => document.getElementById('postModal').classList.add('hidden');
         window.readPost = (id) => {
             const p = announcements.find(a => a.id === id);
             document.getElementById('readTitle').innerText = p.title;
-            document.getElementById('readContent').innerHTML = marked.parse(p.content);
+            document.getElementById('readContent').innerHTML = marked.parse(p.content || '');
+            if(p.linkUrl) {
+                document.getElementById('readLinkArea').classList.remove('hidden');
+                document.getElementById('readLinkBtn').href = p.linkUrl;
+                document.getElementById('readLinkText').innerText = p.linkName || '前往連結';
+            } else { document.getElementById('readLinkArea').classList.add('hidden'); }
             document.getElementById('readModal').classList.remove('hidden');
         };
 
-        // 外部連結渲染
+        // 外部連結管理
         async function loadLinks() {
             const snap = await getDocs(collection(db, "external_links"));
             const links = snap.docs.map(d => ({id: d.id, ...d.data()}));
-            document.getElementById('external-links-grid').innerHTML = links.map(l => `
-                <a href="${l.url}" target="_blank" class="bg-white p-4 rounded-xl border flex items-center space-x-3 hover:shadow-md transition"><i class="fas fa-link text-indigo-500"></i><span class="font-bold text-slate-700 truncate">${l.name}</span></a>`).join('');
-            document.getElementById('manageLinkList').innerHTML = links.map(l => `
-                <div class="flex justify-between items-center bg-white p-3 rounded-lg border"><span class="font-bold truncate mr-2">${l.name}</span><button onclick="window.deleteLink('${l.id}')" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button></div>`).join('');
+            document.getElementById('external-links-grid').innerHTML = links.map(l => `<a href="${l.url}" target="_blank" class="bg-white p-4 rounded-xl border flex items-center space-x-3 hover:shadow-md transition"><i class="fas fa-link text-indigo-500"></i><span class="font-bold text-slate-700 truncate">${l.name}</span></a>`).join('');
+            document.getElementById('manageLinkList').innerHTML = links.map(l => `<div class="flex justify-between items-center bg-white p-3 rounded-lg border"><span class="font-bold truncate mr-2">${l.name}</span><button onclick="window.deleteLink('${l.id}')" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button></div>`).join('');
         }
-
         window.addLink = async () => {
             const name = document.getElementById('newLinkName').value; const url = document.getElementById('newLinkUrl').value;
-            if(!name || !url) return alert("請填寫完整");
+            if(!name || !url) return alert("必填");
             await addDoc(collection(db, "external_links"), { name, url, createdAt: serverTimestamp() });
             document.getElementById('newLinkName').value = ''; document.getElementById('newLinkUrl').value = ''; loadLinks();
         };
         window.deleteLink = async (id) => { if(confirm("刪除？")) { await deleteDoc(doc(db, "external_links", id)); loadLinks(); } };
 
-        // 頁面基礎功能
+        window.deletePost = async (id) => { if(confirm("刪除公告？")) { await deleteDoc(doc(db, "announcements", id)); loadAnnouncements(); } };
+        window.closePostModal = () => document.getElementById('postModal').classList.add('hidden');
         window.switchTab = (t) => {
             currentTab = t;
             ['tab-sheet1', 'tab-sheet2', 'tab-sheet3'].forEach(id => {
@@ -344,7 +356,6 @@
             });
             renderGrid();
         };
-
         window.openDetail = (id) => {
             const s = displaySchools.find(i => i.id === id);
             document.getElementById('detailHeader').innerHTML = `<h3 class="text-2xl font-bold">${s.name}</h3>`;
@@ -354,38 +365,33 @@
             document.getElementById('quickEditBtn').onclick = () => { window.closeDetail(); window.openSchoolModal(id); };
             document.getElementById('detailModal').classList.remove('hidden');
         };
-
         window.addEventInput = (m='', d='', e='') => {
             const div = document.createElement('div'); div.className = "flex space-x-2 items-center bg-slate-50 p-2 rounded-lg";
             div.innerHTML = `<input type="text" placeholder="月" value="${m}" class="w-12 p-2 border rounded-lg"><input type="text" placeholder="日" value="${d}" class="w-16 p-2 border rounded-lg"><input type="text" placeholder="事項" value="${e}" class="flex-1 p-2 border rounded-lg"><button onclick="this.parentElement.remove()" class="text-red-300 px-2"><i class="fas fa-times"></i></button>`;
             document.getElementById('eventInputs').appendChild(div);
         };
-
         document.getElementById('saveSchoolBtn').onclick = async () => {
             const id = document.getElementById('editSchoolId').value; const name = document.getElementById('schoolName').value; const type = document.getElementById('editSchoolType').value;
             const events = Array.from(document.getElementById('eventInputs').children).map(r => ({ m: r.children[0].value, d: r.children[1].value, e: r.children[2].value }));
-            if(!name) return alert("名稱必填");
+            if(!name) return alert("必填");
             const data = { name, type, events, updatedAt: serverTimestamp() };
             if(id) await updateDoc(doc(db, "calendar_db", id), data);
             else { data.order = displaySchools.length; await addDoc(collection(db, "calendar_db"), data); }
             window.closeSchoolModal(); loadSchools();
         };
-
         window.openSchoolModal = (id) => {
             document.getElementById('eventInputs').innerHTML = '';
             if(id) {
                 const s = displaySchools.find(i => i.id === id);
                 document.getElementById('editSchoolId').value = id; document.getElementById('editSchoolType').value = s.type; document.getElementById('schoolName').value = s.name;
-                s.events?.forEach(e => window.addEventInput(e.m, e.d, e.e));
-                document.getElementById('deleteSchoolBtn').classList.remove('hidden');
+                s.events?.forEach(e => window.addEventInput(e.m, e.d, e.e)); document.getElementById('deleteSchoolBtn').classList.remove('hidden');
             } else {
                 document.getElementById('editSchoolId').value = ''; document.getElementById('editSchoolType').value = currentTab; document.getElementById('schoolName').value = '';
                 window.addEventInput(); document.getElementById('deleteSchoolBtn').classList.add('hidden');
             }
             document.getElementById('schoolModal').classList.remove('hidden');
         };
-
-        window.deleteSchool = async () => { if(confirm("確定刪除？")) { await deleteDoc(doc(db, "calendar_db", document.getElementById('editSchoolId').value)); window.closeSchoolModal(); loadSchools(); } };
+        window.deleteSchool = async () => { if(confirm("刪除？")) { await deleteDoc(doc(db, "calendar_db", document.getElementById('editSchoolId').value)); window.closeSchoolModal(); loadSchools(); } };
         window.handleAuth = () => signInWithPopup(auth, provider);
         window.handleLogout = () => signOut(auth);
         window.closeSchoolModal = () => document.getElementById('schoolModal').classList.add('hidden');
